@@ -123,6 +123,7 @@ public class PlayerMotor : MonoBehaviour
 
     private void ProcessPhysics()
     {
+        // this is just a comment
         if (isGrounded && playerVelocity.y < 0)
         {
             playerVelocity.y = -.2f;
@@ -133,6 +134,12 @@ public class PlayerMotor : MonoBehaviour
         controller.Move(playerVelocity * Time.deltaTime);
     }
 
+    private void HandleAirbornPhysics()
+    {
+
+    }
+
+    // ---------------------------Util Methods--------------------------------------------------------------
     public void Jump()
     {
         if (isGrounded)
