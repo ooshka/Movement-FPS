@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayerMotor : MonoBehaviour
@@ -18,8 +16,6 @@ public class PlayerMotor : MonoBehaviour
     public float walkSpeed = 3f;
     public float sprintSpeed = 6f;
     public float slideBoost = 1.5f;
-    public float crouchStrafeDamping = 0.2f;
-    public float airStrafeDamping = 0.5f;
 
     public bool isCrouched;
     public bool isSprinting;
@@ -32,6 +28,7 @@ public class PlayerMotor : MonoBehaviour
     {
         controller = GetComponent<CharacterController>();
         controller.height = standingHeight;
+        prevPosition = transform.position;
     }
 
     // Update is called once per frame
@@ -40,21 +37,16 @@ public class PlayerMotor : MonoBehaviour
         isGrounded = controller.isGrounded;
     }
 
-    private void FixedUpdate()
-    {
-        if (isGrounded)
-        {
-            Vector3 relativePositionDiff = (transform.position - referenceObjectPosition) - (prevPosition - referenceObjectPosition);
-            horizontalSpeed = new Vector3(relativePositionDiff.x, 0, relativePositionDiff.z).magnitude / Time.deltaTime;
-        }
-        prevPosition = transform.position;
-        HandleCrouchHeightChange();
-    }
-
     // receives inputs from input manager script and applies to controller
     // actually happening inside a FixedUpdate
     public void ProcessMove(Vector2 input)
     {
+        if (isGrounded)
+        {
+            horizontalSpeed = new Vector3(playerVelocity.x, 0, playerVelocity.z).magnitude;
+        }
+        HandleCrouchHeightChange();
+
         Vector3 moveDirection = new Vector3(input.x, 0, input.y);
         if (isGrounded)
         {
@@ -71,7 +63,7 @@ public class PlayerMotor : MonoBehaviour
             HandleAirborn(moveDirection);
         }
 
-        ProcessPhysics();
+        ProcessPhysics(moveDirection);
     }
 
     // -----------------------Handle CharacterController-based movement---------------------------------
@@ -115,14 +107,15 @@ public class PlayerMotor : MonoBehaviour
 
     private void HandleAirborn(Vector3 moveDirection)
     {
-        float airSpeed = Mathf.Max(horizontalSpeed, walkSpeed);
-        controller.Move(transform.TransformDirection(moveDirection * airSpeed * Time.deltaTime));
+        float airStrafeSpeed = walkSpeed * 0.75f;
+        controller.Move(transform.TransformDirection(moveDirection * airStrafeSpeed * Time.deltaTime));
     }
 
     // --------------------------Handle physics applied to player-------------------------------------------
 
-    private void ProcessPhysics()
+    private void ProcessPhysics(Vector3 moveDirection)
     {
+
         if (isGrounded && playerVelocity.y < 0)
         {
             playerVelocity.y = -.2f;
@@ -130,15 +123,24 @@ public class PlayerMotor : MonoBehaviour
         {
             playerVelocity.y += gravity * Time.deltaTime;
         }
+        controller.Move(new Vector3(0, playerVelocity.y, 0) * Time.deltaTime);
+
+        UpdatePlayerVelocity();
+    }
+
+    private void HandleAirbornPhysics(Vector3 moveDirection)
+    {
         controller.Move(playerVelocity * Time.deltaTime);
     }
 
-    private void HandleAirbornPhysics()
+    // ---------------------------Util Methods--------------------------------------------------------------
+    private void UpdatePlayerVelocity()
     {
-
+        Vector3 relativePositionDiff = (transform.position) - (prevPosition);
+        playerVelocity = new Vector3(relativePositionDiff.x, relativePositionDiff.y, relativePositionDiff.z) / Time.deltaTime;
+        prevPosition = transform.position;
     }
 
-    // ---------------------------Util Methods--------------------------------------------------------------
     public void Jump()
     {
         if (isGrounded)
@@ -188,7 +190,7 @@ public class PlayerMotor : MonoBehaviour
         // do this by seeing if the y coordinate of the collision matches up with the bottom of the capsule collider
         if (Mathf.Abs(playerCenterY - playerExtentY - hit.point.y) < groundCollisionThreshold)
         {
-            referenceObjectPosition = hit.transform.position;
+            referenceObjectPosition = transform.position;
         }
     }
 
