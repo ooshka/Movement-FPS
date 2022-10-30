@@ -48,25 +48,28 @@ public class PlayerMotor : MonoBehaviour
         HandleCrouchHeightChange();
 
         Vector3 moveDirection = new Vector3(input.x, 0, input.y);
+
+        ProcessCharacterMovement(moveDirection);
+        ProcessPhysics(moveDirection);
+
+    }
+
+    // -----------------------Handle CharacterController-based movement---------------------------------
+
+    private void ProcessCharacterMovement(Vector3 moveDirection)
+    {
         if (isGrounded)
         {
             if (!isCrouched)
             {
                 HandleGrounded(moveDirection);
-            } else
+            }
+            else
             {
                 HandleCrouched(moveDirection);
             }
         }
-        else
-        {
-            HandleAirborn(moveDirection);
-        }
-
-        ProcessPhysics(moveDirection);
     }
-
-    // -----------------------Handle CharacterController-based movement---------------------------------
 
     private void HandleGrounded(Vector3 moveDirection)
     {
@@ -105,41 +108,56 @@ public class PlayerMotor : MonoBehaviour
         }
     }
 
-    private void HandleAirborn(Vector3 moveDirection)
-    {
-        float airStrafeSpeed = walkSpeed * 0.75f;
-        controller.Move(transform.TransformDirection(moveDirection * airStrafeSpeed * Time.deltaTime));
-    }
-
     // --------------------------Handle physics applied to player-------------------------------------------
 
     private void ProcessPhysics(Vector3 moveDirection)
     {
-
-        if (isGrounded && playerVelocity.y < 0)
+        if (isGrounded)
         {
-            playerVelocity.y = -.2f;
+            HandleGroundedPhysics();
         } else
         {
-            playerVelocity.y += gravity * Time.deltaTime;
+            HandleAirbornPhysics(moveDirection);
         }
-        controller.Move(new Vector3(0, playerVelocity.y, 0) * Time.deltaTime);
+
+        controller.Move(playerVelocity * Time.deltaTime);
 
         UpdatePlayerVelocity();
     }
 
-    private void HandleAirbornPhysics(Vector3 moveDirection)
+    private void HandleGroundedPhysics()
     {
-        controller.Move(playerVelocity * Time.deltaTime);
+        playerVelocity.x = 0;
+        playerVelocity.z = 0;
+
+        if (playerVelocity.y <= 0)
+        {
+            playerVelocity.y = -0.5f;
+        } else
+        {
+            // this is here in case we are techincally "grounded" with a positive velocity
+            // might apply gravity to jump twice so may need to redo
+            playerVelocity.y += gravity * Time.deltaTime;
+        }
     }
 
-    // ---------------------------Util Methods--------------------------------------------------------------
+    private void HandleAirbornPhysics(Vector3 moveDirection)
+    {
+        float airStrafeAccel = 10.0f;
+
+        playerVelocity += airStrafeAccel * transform.TransformDirection(moveDirection) * Time.deltaTime;
+
+        playerVelocity.y += gravity * Time.deltaTime;
+    }
+
     private void UpdatePlayerVelocity()
     {
         Vector3 relativePositionDiff = (transform.position) - (prevPosition);
-        playerVelocity = new Vector3(relativePositionDiff.x, relativePositionDiff.y, relativePositionDiff.z) / Time.deltaTime;
+        playerVelocity = relativePositionDiff / Time.deltaTime;
         prevPosition = transform.position;
     }
+
+    // ---------------------------Util Methods--------------------------------------------------------------
 
     public void Jump()
     {

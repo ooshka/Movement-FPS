@@ -666,6 +666,7 @@ MonoBehaviour:
   cam: {fileID: 15253043}
   walkSpeed: 4
   sprintSpeed: 12
+  slideBoost: 1.5
   isCrouched: 0
   isSprinting: 0
   gravity: -9.8
@@ -818,7 +819,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6973364416443982198, guid: d93057f3985ce8a43a75c45d4b0fada2, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1.29
+      value: 1.49
       objectReference: {fileID: 0}
     - target: {fileID: 6973364416443982198, guid: d93057f3985ce8a43a75c45d4b0fada2, type: 3}
       propertyPath: m_LocalPosition.z

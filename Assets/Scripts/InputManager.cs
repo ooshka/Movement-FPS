@@ -25,6 +25,7 @@ public class InputManager : MonoBehaviour
     {
         // tell the motor to move using our grounded action
         Vector2 movement = groundedActions.Movement.ReadValue<Vector2>();
+        // TODO: move logic to PlayerMotor
         if (movement.y > 0 && (int) movement.magnitude == 1)
         {
             motor.isSprinting = true;
