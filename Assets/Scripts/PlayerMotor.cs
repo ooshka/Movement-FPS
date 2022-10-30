@@ -108,7 +108,7 @@ public class PlayerMotor : MonoBehaviour
         }
         else
         {
-            // Crouch walkingg
+            // Crouch walking
             controller.Move(transform.TransformDirection(moveDirection * walkSpeed * Time.deltaTime));
         }
     }
@@ -123,7 +123,6 @@ public class PlayerMotor : MonoBehaviour
 
     private void ProcessPhysics()
     {
-        // this is just a comment
         if (isGrounded && playerVelocity.y < 0)
         {
             playerVelocity.y = -.2f;
