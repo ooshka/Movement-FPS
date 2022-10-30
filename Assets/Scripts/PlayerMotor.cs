@@ -143,9 +143,15 @@ public class PlayerMotor : MonoBehaviour
 
     private void HandleAirbornPhysics(Vector3 moveDirection)
     {
-        float airStrafeAccel = 10.0f;
+        float airStrafeAccel = 15.0f;
+        float airStrafeVelocity = walkSpeed;
 
-        playerVelocity += airStrafeAccel * transform.TransformDirection(moveDirection) * Time.deltaTime;
+        float velInMoveDirection = Vector3.Dot(transform.TransformDirection(moveDirection), playerVelocity) / moveDirection.magnitude;
+
+        if (velInMoveDirection <= airStrafeVelocity)
+        {
+            playerVelocity += airStrafeAccel * transform.TransformDirection(moveDirection) * Time.deltaTime;
+        }
 
         playerVelocity.y += gravity * Time.deltaTime;
     }
