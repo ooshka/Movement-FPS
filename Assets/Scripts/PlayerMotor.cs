@@ -146,11 +146,21 @@ public class PlayerMotor : MonoBehaviour
         float airStrafeAccel = 15.0f;
         float airStrafeVelocity = walkSpeed;
 
-        float velInMoveDirection = Vector3.Dot(transform.TransformDirection(moveDirection), playerVelocity) / moveDirection.magnitude;
+        // we only care about the abs value b/c direction of accel will be handled by the moveDirection
+        float velInMoveDirection = Mathf.Abs(Vector3.Dot(transform.TransformDirection(moveDirection), playerVelocity) / moveDirection.magnitude);
+
+        float additionalVelocity = velInMoveDirection + airStrafeAccel * Time.deltaTime;
+
+        // ensure we don't accelerate past strafing cap
+        // should actually enable air strafing??
+        if (additionalVelocity >= airStrafeVelocity)
+        {
+            additionalVelocity = airStrafeVelocity - velInMoveDirection;
+        }
 
         if (velInMoveDirection <= airStrafeVelocity)
         {
-            playerVelocity += airStrafeAccel * transform.TransformDirection(moveDirection) * Time.deltaTime;
+            playerVelocity += additionalVelocity * transform.TransformDirection(moveDirection);
         }
 
         playerVelocity.y += gravity * Time.deltaTime;
