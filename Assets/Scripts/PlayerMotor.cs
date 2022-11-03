@@ -143,24 +143,27 @@ public class PlayerMotor : MonoBehaviour
 
     private void HandleAirbornPhysics(Vector3 moveDirection)
     {
-        float airStrafeAccel = 15.0f;
-        float airStrafeVelocity = walkSpeed;
-
-        // we only care about the abs value b/c direction of accel will be handled by the moveDirection
-        float velInMoveDirection = Mathf.Abs(Vector3.Dot(transform.TransformDirection(moveDirection), playerVelocity) / moveDirection.magnitude);
-
-        float additionalVelocity = velInMoveDirection + airStrafeAccel * Time.deltaTime;
-
-        // ensure we don't accelerate past strafing cap
-        // should actually enable air strafing??
-        if (additionalVelocity >= airStrafeVelocity)
+        if (moveDirection.magnitude > 0)
         {
-            additionalVelocity = airStrafeVelocity - velInMoveDirection;
-        }
+            float airStrafeAccel = 30.0f;
+            float airStrafeVelocity = walkSpeed;
 
-        if (velInMoveDirection <= airStrafeVelocity)
-        {
+            float velInMoveDirection = Vector3.Dot(transform.TransformDirection(moveDirection), playerVelocity) / moveDirection.magnitude;
+
+            velInMoveDirection = Mathf.Max(0, velInMoveDirection);
+
+            float additionalVelocity = airStrafeAccel * Time.deltaTime;
+
+
+            // ensure we don't accelerate past strafing cap
+            // should actually enable air strafing??
+            if (additionalVelocity + velInMoveDirection >= airStrafeVelocity)
+            {
+                additionalVelocity = Mathf.Max(0, airStrafeVelocity - velInMoveDirection);
+            }
+
             playerVelocity += additionalVelocity * transform.TransformDirection(moveDirection);
+            
         }
 
         playerVelocity.y += gravity * Time.deltaTime;
