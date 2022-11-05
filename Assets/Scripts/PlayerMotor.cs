@@ -144,7 +144,7 @@ public class PlayerMotor : MonoBehaviour
 
     private void HandleCrouchedPhysics(Vector3 moveDirection)
     {
-        float frictionAccel = 10f;
+        float frictionAccel = 12f;
         Vector3 frictionUnitVector = -playerVelocity / playerVelocity.magnitude;
 
         playerVelocity += frictionUnitVector * frictionAccel * Time.deltaTime;
@@ -206,7 +206,7 @@ public class PlayerMotor : MonoBehaviour
     {
         float slideCutoffVelocity = 0.2f;
 
-        if (isCrouched)
+        if (isCrouched && isGrounded)
         {
             if (playerVelocity.magnitude >= sprintSpeed * 0.95f)
             {
