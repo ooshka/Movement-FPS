@@ -4,6 +4,8 @@ public class PlayerMotor : MonoBehaviour
 {
     public Camera cam;
     private CharacterController controller;
+
+    // TODO: Refactor to local variable
     private Vector3 playerVelocity;
 
     private Vector3 prevPosition;
@@ -15,9 +17,9 @@ public class PlayerMotor : MonoBehaviour
     private float horizontalSpeed;
     public float walkSpeed = 3f;
     public float sprintSpeed = 6f;
-    public float slideBoost = 1.5f;
 
     public bool isCrouched;
+    private bool isSliding = false;
     public bool isSprinting;
     private bool isGrounded;
 
@@ -86,22 +88,7 @@ public class PlayerMotor : MonoBehaviour
 
     private void HandleCrouched(Vector3 moveDirection)
     {
-        if (horizontalSpeed >= sprintSpeed * 0.95f)
-        {
-            // Sliding
-            // Will need to add a handlePhysics method to compute competing forces on the player
-            if (horizontalSpeed >= sprintSpeed * slideBoost)
-            {
-                // we're already zooming no need to give a boost for sliding
-                controller.Move(transform.TransformDirection(moveDirection * horizontalSpeed * Time.deltaTime));
-            }
-            else
-            {
-                controller.Move(transform.TransformDirection(moveDirection * sprintSpeed * slideBoost * Time.deltaTime));
-            }
-
-        }
-        else
+        if (!isSliding)
         {
             // Crouch walking
             controller.Move(transform.TransformDirection(moveDirection * walkSpeed * Time.deltaTime));
@@ -112,9 +99,33 @@ public class PlayerMotor : MonoBehaviour
 
     private void ProcessPhysics(Vector3 moveDirection)
     {
+        CalcPlayerSliding();
         if (isGrounded)
         {
-            HandleGroundedPhysics();
+            if (playerVelocity.y <= 0.2)
+            {
+                playerVelocity.y = -0.5f;
+            }
+            else
+            {
+                // this is here in case we are techincally "grounded" with a positive velocity
+                // might apply gravity to jump twice so may need to redo
+                playerVelocity.y += gravity * Time.deltaTime;
+            }
+            if (!isCrouched)
+            {
+                HandleGroundedPhysics();
+            } else
+            {
+                if (isSliding)
+                {
+                    HandleCrouchedPhysics(moveDirection);
+                } else
+                {
+                    playerVelocity.x = 0;
+                    playerVelocity.z = 0;
+                }
+            }
         } else
         {
             HandleAirbornPhysics(moveDirection);
@@ -129,41 +140,29 @@ public class PlayerMotor : MonoBehaviour
     {
         playerVelocity.x = 0;
         playerVelocity.z = 0;
+    }
 
-        if (playerVelocity.y <= 0)
-        {
-            playerVelocity.y = -0.5f;
-        } else
-        {
-            // this is here in case we are techincally "grounded" with a positive velocity
-            // might apply gravity to jump twice so may need to redo
-            playerVelocity.y += gravity * Time.deltaTime;
-        }
+    private void HandleCrouchedPhysics(Vector3 moveDirection)
+    {
+        float frictionAccel = 10f;
+        Vector3 frictionUnitVector = -playerVelocity / playerVelocity.magnitude;
+
+        playerVelocity += frictionUnitVector * frictionAccel * Time.deltaTime;
     }
 
     private void HandleAirbornPhysics(Vector3 moveDirection)
     {
         if (moveDirection.magnitude > 0)
         {
-            float airStrafeAccel = 30.0f;
-            float airStrafeVelocity = walkSpeed;
 
-            float velInMoveDirection = Vector3.Dot(transform.TransformDirection(moveDirection), playerVelocity) / moveDirection.magnitude;
+            // x-plane movement
+            Vector3 xDirection = transform.TransformDirection(new Vector3(moveDirection.x, 0, 0));
+            playerVelocity += AddVelocityInDirection(playerVelocity, xDirection, 15.0f, walkSpeed);
 
-            velInMoveDirection = Mathf.Max(0, velInMoveDirection);
+            // z-plane movement
+            Vector3 zDirection = transform.TransformDirection(new Vector3(0, 0, moveDirection.z));
+            playerVelocity += AddVelocityInDirection(playerVelocity, zDirection, 15.0f, walkSpeed);
 
-            float additionalVelocity = airStrafeAccel * Time.deltaTime;
-
-
-            // ensure we don't accelerate past strafing cap
-            // should actually enable air strafing??
-            if (additionalVelocity + velInMoveDirection >= airStrafeVelocity)
-            {
-                additionalVelocity = Mathf.Max(0, airStrafeVelocity - velInMoveDirection);
-            }
-
-            playerVelocity += additionalVelocity * transform.TransformDirection(moveDirection);
-            
         }
 
         playerVelocity.y += gravity * Time.deltaTime;
@@ -178,11 +177,54 @@ public class PlayerMotor : MonoBehaviour
 
     // ---------------------------Util Methods--------------------------------------------------------------
 
+
+    public Vector3 AddVelocityInDirection(Vector3 currentVelocity, Vector3 direction, float acceleration, float maxVelocity)
+    {
+        float velInMoveDirection = Vector3.Dot(direction, currentVelocity) / direction.magnitude;
+
+        velInMoveDirection = Mathf.Max(0, velInMoveDirection);
+
+        float additionalVelocity = acceleration * Time.deltaTime;
+
+        if (velInMoveDirection + additionalVelocity >= maxVelocity)
+        {
+            additionalVelocity = Mathf.Max(0, maxVelocity - velInMoveDirection);
+        }
+
+        return additionalVelocity * direction;
+    }
+
     public void Jump()
     {
         if (isGrounded)
         {
             playerVelocity.y = Mathf.Sqrt(-2 * gravity * jumpHeight);
+        }
+    }
+
+    private void CalcPlayerSliding()
+    {
+        float slideCutoffVelocity = 0.2f;
+
+        if (isCrouched)
+        {
+            if (playerVelocity.magnitude >= sprintSpeed * 0.95f)
+            {
+                if (isSliding == false)
+                {
+                    float slideBoost = 5f;
+                    Vector3 slideBoostVector = playerVelocity / playerVelocity.magnitude * slideBoost;
+                    playerVelocity += slideBoostVector;
+                }
+                isSliding = true;
+            } else if (playerVelocity.magnitude < slideCutoffVelocity)
+            {
+                isSliding = false;
+            }
+
+        } else if (isGrounded)
+        {
+            isSliding = false;
         }
     }
 
