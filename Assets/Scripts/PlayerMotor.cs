@@ -21,7 +21,7 @@ public class PlayerMotor : MonoBehaviour
     public bool isCrouched;
     private bool isSliding = false;
     public bool isSprinting;
-    private bool isGrounded;
+    public bool isGrounded;
 
     public float gravity = -9.8f;
     public float jumpHeight = 3f;
