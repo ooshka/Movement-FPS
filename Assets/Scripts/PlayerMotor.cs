@@ -5,32 +5,32 @@ public class PlayerMotor : MonoBehaviour
     public Camera cam;
     private CharacterController controller;
 
-    // TODO: Refactor to local variable
-    private Vector3 playerVelocity;
+    private float _standingHeight = 2.0f;
+    private float _crouchedHeight = 1.0f;
 
-    private Vector3 prevPosition;
+    public float _gravity = -9.8f;
+    public float _jumpHeight = 3f;
+    public float _walkSpeed = 3f;
+    public float _sprintSpeed = 6f;
+    public float _slideFrictionDecel = 12f;
+
+    private Vector3 _playerVelocity;
+
+    private Vector3 _prevPosition;
     private Vector3 referenceObjectPosition;
-
-    private float standingHeight = 2.0f;
-    private float crouchedHeight = 1.0f;
-
-    private float horizontalSpeed;
-    public float walkSpeed = 3f;
-    public float sprintSpeed = 6f;
 
     public bool _isCrouched;
     private bool _isSliding = false;
     public bool _isSprinting;
     public bool _isGrounded;
 
-    public float gravity = -9.8f;
-    public float jumpHeight = 3f;
+
     // Start is called before the first frame update
     void Start()
     {
         controller = GetComponent<CharacterController>();
-        controller.height = standingHeight;
-        prevPosition = transform.position;
+        controller.height = _standingHeight;
+        _prevPosition = transform.position;
     }
 
     // Update is called once per frame
@@ -42,10 +42,53 @@ public class PlayerMotor : MonoBehaviour
     // actually happening inside a FixedUpdate
     public void ProcessMove(Vector2 input)
     {
+        Vector3 addedVelocity = Vector3.zero;
+        Vector3 moveDirection = new Vector3(input.x, 0, input.y);
 
         _isGrounded = controller.isGrounded;
 
-        if (input.y > 0 && (int)input.magnitude == 1)
+        // possible player states
+        if (_isGrounded)
+        {
+            // we don't want gravity to continually crank up our negative vert velocity up so reset to some small negative value
+            ResetVerticalVelocity();
+
+            if (!_isCrouched)
+            {
+                // grounded
+                addedVelocity += HandleGroundedMovement(moveDirection);
+            } else
+            {
+                // crouched
+                addedVelocity += HandleCrouchedMovement(moveDirection);
+            }
+        } else
+        {
+            // airborn
+        }
+
+        // gravity
+        addedVelocity += new Vector3(0, _gravity * Time.deltaTime, 0);
+
+        // move player
+
+        HandleCrouchHeightChange();
+
+
+        ProcessCharacterMovement(moveDirection);
+        ProcessPhysics(moveDirection);
+
+    }
+
+    private Vector3 HandleGroundedMovement(Vector3 moveDirection)
+    {
+        Vector3 addVelocity;
+
+        // need to ostensibly "stop" our horizontal velocity because we're only going to be moving exactly as far as this method wants
+        _playerVelocity.x = 0;
+        _playerVelocity.z = 0;
+
+        if (moveDirection.z > 0 && (int)moveDirection.magnitude == 1)
         {
             _isSprinting = true;
         }
@@ -54,17 +97,41 @@ public class PlayerMotor : MonoBehaviour
             _isSprinting = false;
         }
 
-        if (_isGrounded)
+        if (_isSprinting)
         {
-            horizontalSpeed = new Vector3(playerVelocity.x, 0, playerVelocity.z).magnitude;
+            float horizontalSpeed = new Vector3(_playerVelocity.x, 0, _playerVelocity.z).magnitude;
+            float newSpeed = MotionCurves.LinearInterp(horizontalSpeed, _walkSpeed, _sprintSpeed, 1f);
+            addVelocity = moveDirection * newSpeed;
         }
-        HandleCrouchHeightChange();
+        else
+        {
+            addVelocity = moveDirection * _walkSpeed;
+        }
 
-        Vector3 moveDirection = new Vector3(input.x, 0, input.y);
+        return addVelocity;
+    }
 
-        ProcessCharacterMovement(moveDirection);
-        ProcessPhysics(moveDirection);
+    private Vector3 HandleCrouchedMovement(Vector3 moveDirection)
+    {
+        Vector3 addVelocity;
 
+        if (!_isSliding)
+        {
+            // crouch walking
+
+            // need to ostensibly "stop" our horizontal velocity because we're only going to be moving exactly as far as this method wants
+            _playerVelocity.x = 0;
+            _playerVelocity.z = 0;
+
+            addVelocity = moveDirection * _walkSpeed;
+        } else
+        {        
+            Vector3 frictionUnitVector = -1 * _playerVelocity / _playerVelocity.magnitude;
+
+            addVelocity = frictionUnitVector * _slideFrictionDecel * Time.deltaTime;
+        }
+
+        return addVelocity;
     }
 
     // -----------------------Handle CharacterController-based movement---------------------------------
@@ -73,6 +140,7 @@ public class PlayerMotor : MonoBehaviour
     {
         if (_isGrounded)
         {
+
             if (!_isCrouched)
             {
                 HandleGrounded(moveDirection);
@@ -86,24 +154,12 @@ public class PlayerMotor : MonoBehaviour
 
     private void HandleGrounded(Vector3 moveDirection)
     {
-        if (_isSprinting)
-        {
-            float newSpeed = MotionCurves.LinearInterp(horizontalSpeed, walkSpeed, sprintSpeed, 1f);
-            controller.Move(transform.TransformDirection(moveDirection * newSpeed * Time.deltaTime));
-        }
-        else
-        {
-            controller.Move(transform.TransformDirection(moveDirection * walkSpeed * Time.deltaTime));
-        }
+
     }
 
     private void HandleCrouched(Vector3 moveDirection)
     {
-        if (!_isSliding)
-        {
-            // Crouch walking
-            controller.Move(transform.TransformDirection(moveDirection * walkSpeed * Time.deltaTime));
-        }
+
     }
 
     // --------------------------Handle physics applied to player-------------------------------------------
@@ -113,16 +169,6 @@ public class PlayerMotor : MonoBehaviour
         CalcPlayerSliding();
         if (_isGrounded)
         {
-            if (playerVelocity.y <= 0.2)
-            {
-                playerVelocity.y = -0.5f;
-            }
-            else
-            {
-                // this is here in case we are techincally "grounded" with a positive velocity
-                // might apply gravity to jump twice so may need to redo
-                playerVelocity.y += gravity * Time.deltaTime;
-            }
             if (!_isCrouched)
             {
                 HandleGroundedPhysics();
@@ -133,8 +179,8 @@ public class PlayerMotor : MonoBehaviour
                     HandleCrouchedPhysics(moveDirection);
                 } else
                 {
-                    playerVelocity.x = 0;
-                    playerVelocity.z = 0;
+                    _playerVelocity.x = 0;
+                    _playerVelocity.z = 0;
                 }
             }
         } else
@@ -142,23 +188,18 @@ public class PlayerMotor : MonoBehaviour
             HandleAirbornPhysics(moveDirection);
         }
 
-        controller.Move(playerVelocity * Time.deltaTime);
+        controller.Move(_playerVelocity * Time.deltaTime);
 
         UpdatePlayerVelocity();
     }
 
     private void HandleGroundedPhysics()
     {
-        playerVelocity.x = 0;
-        playerVelocity.z = 0;
+
     }
 
     private void HandleCrouchedPhysics(Vector3 moveDirection)
     {
-        float frictionAccel = 12f;
-        Vector3 frictionUnitVector = -playerVelocity / playerVelocity.magnitude;
-
-        playerVelocity += frictionUnitVector * frictionAccel * Time.deltaTime;
     }
 
     private void HandleAirbornPhysics(Vector3 moveDirection)
@@ -168,28 +209,35 @@ public class PlayerMotor : MonoBehaviour
 
             // x-plane movement
             Vector3 xDirection = transform.TransformDirection(new Vector3(moveDirection.x, 0, 0));
-            playerVelocity += AddVelocityInDirection(playerVelocity, xDirection, 15.0f, walkSpeed);
+            _playerVelocity += AddVelocityInDirection(_playerVelocity, xDirection, 15.0f, _walkSpeed);
 
             // z-plane movement
             Vector3 zDirection = transform.TransformDirection(new Vector3(0, 0, moveDirection.z));
-            playerVelocity += AddVelocityInDirection(playerVelocity, zDirection, 15.0f, walkSpeed);
+            _playerVelocity += AddVelocityInDirection(_playerVelocity, zDirection, 15.0f, _walkSpeed);
 
         }
 
-        playerVelocity.y += gravity * Time.deltaTime;
+        _playerVelocity.y += _gravity * Time.deltaTime;
     }
 
     private void UpdatePlayerVelocity()
     {
-        Vector3 relativePositionDiff = (transform.position) - (prevPosition);
-        playerVelocity = relativePositionDiff / Time.deltaTime;
-        prevPosition = transform.position;
+        Vector3 relativePositionDiff = (transform.position) - (_prevPosition);
+        _playerVelocity = relativePositionDiff / Time.deltaTime;
+        _prevPosition = transform.position;
     }
 
     // ---------------------------Util Methods--------------------------------------------------------------
 
+    private void ResetVerticalVelocity()
+    {
+        if (_playerVelocity.y <= 0.2)
+        {
+            _playerVelocity.y = -0.5f;
+        }
+    }
 
-    public Vector3 AddVelocityInDirection(Vector3 currentVelocity, Vector3 direction, float acceleration, float maxVelocity)
+    private Vector3 AddVelocityInDirection(Vector3 currentVelocity, Vector3 direction, float acceleration, float maxVelocity)
     {
         float velInMoveDirection = Vector3.Dot(direction, currentVelocity) / direction.magnitude;
 
@@ -209,7 +257,7 @@ public class PlayerMotor : MonoBehaviour
     {
         if (_isGrounded)
         {
-            playerVelocity.y = Mathf.Sqrt(-2 * gravity * jumpHeight);
+            _playerVelocity.y = Mathf.Sqrt(-2 * _gravity * _jumpHeight);
         }
     }
 
@@ -219,16 +267,16 @@ public class PlayerMotor : MonoBehaviour
 
         if (_isCrouched && _isGrounded)
         {
-            if (playerVelocity.magnitude >= sprintSpeed * 0.95f)
+            if (_playerVelocity.magnitude >= _sprintSpeed * 0.95f)
             {
                 if (_isSliding == false)
                 {
                     float slideBoost = 5f;
-                    Vector3 slideBoostVector = playerVelocity / playerVelocity.magnitude * slideBoost;
-                    playerVelocity += slideBoostVector;
+                    Vector3 slideBoostVector = _playerVelocity / _playerVelocity.magnitude * slideBoost;
+                    _playerVelocity += slideBoostVector;
                 }
                 _isSliding = true;
-            } else if (playerVelocity.magnitude < slideCutoffVelocity)
+            } else if (_playerVelocity.magnitude < slideCutoffVelocity)
             {
                 _isSliding = false;
             }
@@ -246,25 +294,25 @@ public class PlayerMotor : MonoBehaviour
 
        if (_isCrouched)
         {
-            if (controller.height != crouchedHeight)
+            if (controller.height != _crouchedHeight)
             {
-                newHeight = MotionCurves.LinearInterp(controller.height, standingHeight, crouchedHeight, crouchTime);
+                newHeight = MotionCurves.LinearInterp(controller.height, _standingHeight, _crouchedHeight, crouchTime);
             }
         } else
         {
-            if (controller.height != standingHeight)
+            if (controller.height != _standingHeight)
             {
-                newHeight = MotionCurves.LinearInterp(controller.height, crouchedHeight, standingHeight, crouchTime);
+                newHeight = MotionCurves.LinearInterp(controller.height, _crouchedHeight, _standingHeight, crouchTime);
             }
         }
         // ensure we've actually updated to a new height
         if (newHeight != 0)
         {
-            controller.center = Vector3.down * (standingHeight - newHeight) / 2f;
+            controller.center = Vector3.down * (_standingHeight - newHeight) / 2f;
             controller.height = newHeight;
 
-            // hardcoded camera heiht (awful). will fix with model animations
-            cam.transform.localPosition = new Vector3(0 , 1.4f * newHeight / standingHeight - 0.8f, 0);
+            // hardcoded camera height (awful). will fix with model animations
+            cam.transform.localPosition = new Vector3(0 , 1.4f * newHeight / _standingHeight - 0.8f, 0);
         }
     }
 
