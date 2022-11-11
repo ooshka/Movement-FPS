@@ -43,6 +43,15 @@ public class PlayerMotor : MonoBehaviour
     // actually happening inside a FixedUpdate
     public void ProcessMove(Vector2 input)
     {
+        if (input.y > 0 && (int)input.magnitude == 1)
+        {
+            isSprinting = true;
+        }
+        else
+        {
+            isSprinting = false;
+        }
+
         if (isGrounded)
         {
             horizontalSpeed = new Vector3(playerVelocity.x, 0, playerVelocity.z).magnitude;
