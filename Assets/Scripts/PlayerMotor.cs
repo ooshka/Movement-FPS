@@ -18,10 +18,10 @@ public class PlayerMotor : MonoBehaviour
     public float walkSpeed = 3f;
     public float sprintSpeed = 6f;
 
-    public bool isCrouched;
-    private bool isSliding = false;
-    public bool isSprinting;
-    public bool isGrounded;
+    public bool _isCrouched;
+    private bool _isSliding = false;
+    public bool _isSprinting;
+    public bool _isGrounded;
 
     public float gravity = -9.8f;
     public float jumpHeight = 3f;
@@ -36,23 +36,25 @@ public class PlayerMotor : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        isGrounded = controller.isGrounded;
     }
 
     // receives inputs from input manager script and applies to controller
     // actually happening inside a FixedUpdate
     public void ProcessMove(Vector2 input)
     {
+
+        _isGrounded = controller.isGrounded;
+
         if (input.y > 0 && (int)input.magnitude == 1)
         {
-            isSprinting = true;
+            _isSprinting = true;
         }
         else
         {
-            isSprinting = false;
+            _isSprinting = false;
         }
 
-        if (isGrounded)
+        if (_isGrounded)
         {
             horizontalSpeed = new Vector3(playerVelocity.x, 0, playerVelocity.z).magnitude;
         }
@@ -69,9 +71,9 @@ public class PlayerMotor : MonoBehaviour
 
     private void ProcessCharacterMovement(Vector3 moveDirection)
     {
-        if (isGrounded)
+        if (_isGrounded)
         {
-            if (!isCrouched)
+            if (!_isCrouched)
             {
                 HandleGrounded(moveDirection);
             }
@@ -84,7 +86,7 @@ public class PlayerMotor : MonoBehaviour
 
     private void HandleGrounded(Vector3 moveDirection)
     {
-        if (isSprinting)
+        if (_isSprinting)
         {
             float newSpeed = MotionCurves.LinearInterp(horizontalSpeed, walkSpeed, sprintSpeed, 1f);
             controller.Move(transform.TransformDirection(moveDirection * newSpeed * Time.deltaTime));
@@ -97,7 +99,7 @@ public class PlayerMotor : MonoBehaviour
 
     private void HandleCrouched(Vector3 moveDirection)
     {
-        if (!isSliding)
+        if (!_isSliding)
         {
             // Crouch walking
             controller.Move(transform.TransformDirection(moveDirection * walkSpeed * Time.deltaTime));
@@ -109,7 +111,7 @@ public class PlayerMotor : MonoBehaviour
     private void ProcessPhysics(Vector3 moveDirection)
     {
         CalcPlayerSliding();
-        if (isGrounded)
+        if (_isGrounded)
         {
             if (playerVelocity.y <= 0.2)
             {
@@ -121,12 +123,12 @@ public class PlayerMotor : MonoBehaviour
                 // might apply gravity to jump twice so may need to redo
                 playerVelocity.y += gravity * Time.deltaTime;
             }
-            if (!isCrouched)
+            if (!_isCrouched)
             {
                 HandleGroundedPhysics();
             } else
             {
-                if (isSliding)
+                if (_isSliding)
                 {
                     HandleCrouchedPhysics(moveDirection);
                 } else
@@ -205,7 +207,7 @@ public class PlayerMotor : MonoBehaviour
 
     public void Jump()
     {
-        if (isGrounded)
+        if (_isGrounded)
         {
             playerVelocity.y = Mathf.Sqrt(-2 * gravity * jumpHeight);
         }
@@ -215,25 +217,25 @@ public class PlayerMotor : MonoBehaviour
     {
         float slideCutoffVelocity = 0.2f;
 
-        if (isCrouched && isGrounded)
+        if (_isCrouched && _isGrounded)
         {
             if (playerVelocity.magnitude >= sprintSpeed * 0.95f)
             {
-                if (isSliding == false)
+                if (_isSliding == false)
                 {
                     float slideBoost = 5f;
                     Vector3 slideBoostVector = playerVelocity / playerVelocity.magnitude * slideBoost;
                     playerVelocity += slideBoostVector;
                 }
-                isSliding = true;
+                _isSliding = true;
             } else if (playerVelocity.magnitude < slideCutoffVelocity)
             {
-                isSliding = false;
+                _isSliding = false;
             }
 
-        } else if (isGrounded)
+        } else if (_isGrounded)
         {
-            isSliding = false;
+            _isSliding = false;
         }
     }
 
@@ -242,7 +244,7 @@ public class PlayerMotor : MonoBehaviour
        float crouchTime = 0.25f;
         float newHeight = 0f;
 
-       if (isCrouched)
+       if (_isCrouched)
         {
             if (controller.height != crouchedHeight)
             {
