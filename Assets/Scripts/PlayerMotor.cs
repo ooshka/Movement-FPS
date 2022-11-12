@@ -14,6 +14,9 @@ public class PlayerMotor : MonoBehaviour
     public float _sprintSpeed = 6f;
     public float _slideFrictionDecel = 12f;
     public float _airStrafeAccel = 15f;
+    public float _slideCutoffVelocity = 0.2f;
+    public float _slideStartVelocity;
+    public float _slideBoost = 5.0f;
 
     private Vector3 _playerVelocity;
 
@@ -21,7 +24,8 @@ public class PlayerMotor : MonoBehaviour
     private Vector3 referenceObjectPosition;
 
     public bool _isCrouched;
-    private bool _isSliding = false;
+    public bool _isSliding = false;
+    public bool _wasSliding;
     public bool _isSprinting;
     public bool _isGrounded;
 
@@ -32,6 +36,7 @@ public class PlayerMotor : MonoBehaviour
         controller = GetComponent<CharacterController>();
         controller.height = _standingHeight;
         _prevPosition = transform.position;
+        _slideStartVelocity = 0.95f * _sprintSpeed;
     }
 
     // Update is called once per frame
@@ -48,6 +53,9 @@ public class PlayerMotor : MonoBehaviour
 
         _isGrounded = controller.isGrounded;
 
+        // need to set our sliding flags regardless of state
+        CalcPlayerSliding();
+        
         // possible player states
         if (_isGrounded)
         {
@@ -72,12 +80,14 @@ public class PlayerMotor : MonoBehaviour
         // gravity
         addedVelocity += new Vector3(0, _gravity * Time.deltaTime, 0);
 
-        // move player
-
+        // change the controller's height
         HandleCrouchHeightChange();
 
+        // add our new velocity
+        _playerVelocity += addedVelocity;
 
-        ProcessPhysics(moveDirection);
+        // move player
+        controller.Move(_playerVelocity * Time.deltaTime);
 
         // update global velocity
         UpdatePlayerVelocity();
@@ -86,7 +96,7 @@ public class PlayerMotor : MonoBehaviour
 
     private Vector3 HandleGroundedMovement(Vector3 moveDirection)
     {
-        Vector3 addVelocity;
+        Vector3 addVelocity = Vector3.zero;
 
         // need to ostensibly "stop" our horizontal velocity because we're only going to be moving exactly as far as this method wants
         _playerVelocity.x = 0;
@@ -105,11 +115,11 @@ public class PlayerMotor : MonoBehaviour
         {
             float horizontalSpeed = new Vector3(_playerVelocity.x, 0, _playerVelocity.z).magnitude;
             float newSpeed = MotionCurves.LinearInterp(horizontalSpeed, _walkSpeed, _sprintSpeed, 1f);
-            addVelocity = moveDirection * newSpeed;
+            addVelocity += transform.TransformDirection(moveDirection) * newSpeed;
         }
         else
         {
-            addVelocity = moveDirection * _walkSpeed;
+            addVelocity += transform.TransformDirection(moveDirection) * _walkSpeed;
         }
 
         return addVelocity;
@@ -117,7 +127,7 @@ public class PlayerMotor : MonoBehaviour
 
     private Vector3 HandleCrouchedMovement(Vector3 moveDirection)
     {
-        Vector3 addVelocity;
+        Vector3 addVelocity = Vector3.zero;
 
         if (!_isSliding)
         {
@@ -127,12 +137,20 @@ public class PlayerMotor : MonoBehaviour
             _playerVelocity.x = 0;
             _playerVelocity.z = 0;
 
-            addVelocity = moveDirection * _walkSpeed;
+            addVelocity += transform.TransformDirection(moveDirection) * _walkSpeed;
         } else
-        {        
-            Vector3 frictionUnitVector = -1 * _playerVelocity / _playerVelocity.magnitude;
+        {
+            Vector3 velDirection = _playerVelocity / _playerVelocity.magnitude;
 
-            addVelocity = frictionUnitVector * _slideFrictionDecel * Time.deltaTime;
+            // we be boostin
+            if (_wasSliding == false)
+            {
+                Vector3 _slideBoostVelocity = velDirection * _slideBoost;
+                addVelocity += _slideBoostVelocity;
+            }
+
+            Vector3 frictionUnitVector = -1 * velDirection;
+            addVelocity += frictionUnitVector * _slideFrictionDecel * Time.deltaTime;
         }
 
         return addVelocity;
@@ -158,51 +176,7 @@ public class PlayerMotor : MonoBehaviour
         return addVelocity;
     }
 
-    // --------------------------Handle physics applied to player-------------------------------------------
-
-    private void ProcessPhysics(Vector3 moveDirection)
-    {
-        CalcPlayerSliding();
-        if (_isGrounded)
-        {
-            if (!_isCrouched)
-            {
-                HandleGroundedPhysics();
-            } else
-            {
-                if (_isSliding)
-                {
-                    HandleCrouchedPhysics(moveDirection);
-                } else
-                {
-                    _playerVelocity.x = 0;
-                    _playerVelocity.z = 0;
-                }
-            }
-        } else
-        {
-            HandleAirbornPhysics(moveDirection);
-        }
-
-        controller.Move(_playerVelocity * Time.deltaTime);
-
-    }
-
-    private void HandleGroundedPhysics()
-    {
-
-    }
-
-    private void HandleCrouchedPhysics(Vector3 moveDirection)
-    {
-    }
-
-    private void HandleAirbornPhysics(Vector3 moveDirection)
-    {
-
-
-        _playerVelocity.y += _gravity * Time.deltaTime;
-    }
+    // ---------------------------Util Methods--------------------------------------------------------------
 
     private void UpdatePlayerVelocity()
     {
@@ -210,8 +184,6 @@ public class PlayerMotor : MonoBehaviour
         _playerVelocity = relativePositionDiff / Time.deltaTime;
         _prevPosition = transform.position;
     }
-
-    // ---------------------------Util Methods--------------------------------------------------------------
 
     private void ResetVerticalVelocity()
     {
@@ -247,25 +219,19 @@ public class PlayerMotor : MonoBehaviour
 
     private void CalcPlayerSliding()
     {
-        float slideCutoffVelocity = 0.2f;
+        // have some handle on the previous frame's slide value so we can boost
+        _wasSliding = _isSliding;
 
         if (_isCrouched && _isGrounded)
         {
-            if (_playerVelocity.magnitude >= _sprintSpeed * 0.95f)
+            if (_playerVelocity.magnitude >= _slideStartVelocity)
             {
-                if (_isSliding == false)
-                {
-                    float slideBoost = 5f;
-                    Vector3 slideBoostVector = _playerVelocity / _playerVelocity.magnitude * slideBoost;
-                    _playerVelocity += slideBoostVector;
-                }
                 _isSliding = true;
-            } else if (_playerVelocity.magnitude < slideCutoffVelocity)
+            } else if (_playerVelocity.magnitude < _slideCutoffVelocity)
             {
                 _isSliding = false;
             }
-
-        } else if (_isGrounded)
+        } else
         {
             _isSliding = false;
         }
