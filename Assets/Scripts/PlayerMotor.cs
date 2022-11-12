@@ -13,6 +13,7 @@ public class PlayerMotor : MonoBehaviour
     public float _walkSpeed = 3f;
     public float _sprintSpeed = 6f;
     public float _slideFrictionDecel = 12f;
+    public float _airStrafeAccel = 15f;
 
     private Vector3 _playerVelocity;
 
@@ -65,6 +66,7 @@ public class PlayerMotor : MonoBehaviour
         } else
         {
             // airborn
+            addedVelocity += HandleAirbornMovement(moveDirection);
         }
 
         // gravity
@@ -75,8 +77,10 @@ public class PlayerMotor : MonoBehaviour
         HandleCrouchHeightChange();
 
 
-        ProcessCharacterMovement(moveDirection);
         ProcessPhysics(moveDirection);
+
+        // update global velocity
+        UpdatePlayerVelocity();
 
     }
 
@@ -134,32 +138,24 @@ public class PlayerMotor : MonoBehaviour
         return addVelocity;
     }
 
-    // -----------------------Handle CharacterController-based movement---------------------------------
-
-    private void ProcessCharacterMovement(Vector3 moveDirection)
+    private Vector3 HandleAirbornMovement(Vector3 moveDirection)
     {
-        if (_isGrounded)
+        Vector3 addVelocity = Vector3.zero;
+
+        if (moveDirection.magnitude > 0)
         {
 
-            if (!_isCrouched)
-            {
-                HandleGrounded(moveDirection);
-            }
-            else
-            {
-                HandleCrouched(moveDirection);
-            }
+            // x-plane movement
+            Vector3 xDirection = transform.TransformDirection(new Vector3(moveDirection.x, 0, 0));
+            addVelocity += AddVelocityInDirection(_playerVelocity, xDirection, _airStrafeAccel, _walkSpeed);
+
+            // z-plane movement
+            Vector3 zDirection = transform.TransformDirection(new Vector3(0, 0, moveDirection.z));
+            addVelocity += AddVelocityInDirection(_playerVelocity, zDirection, _airStrafeAccel, _walkSpeed);
+
         }
-    }
 
-    private void HandleGrounded(Vector3 moveDirection)
-    {
-
-    }
-
-    private void HandleCrouched(Vector3 moveDirection)
-    {
-
+        return addVelocity;
     }
 
     // --------------------------Handle physics applied to player-------------------------------------------
@@ -190,7 +186,6 @@ public class PlayerMotor : MonoBehaviour
 
         controller.Move(_playerVelocity * Time.deltaTime);
 
-        UpdatePlayerVelocity();
     }
 
     private void HandleGroundedPhysics()
@@ -204,18 +199,7 @@ public class PlayerMotor : MonoBehaviour
 
     private void HandleAirbornPhysics(Vector3 moveDirection)
     {
-        if (moveDirection.magnitude > 0)
-        {
 
-            // x-plane movement
-            Vector3 xDirection = transform.TransformDirection(new Vector3(moveDirection.x, 0, 0));
-            _playerVelocity += AddVelocityInDirection(_playerVelocity, xDirection, 15.0f, _walkSpeed);
-
-            // z-plane movement
-            Vector3 zDirection = transform.TransformDirection(new Vector3(0, 0, moveDirection.z));
-            _playerVelocity += AddVelocityInDirection(_playerVelocity, zDirection, 15.0f, _walkSpeed);
-
-        }
 
         _playerVelocity.y += _gravity * Time.deltaTime;
     }
