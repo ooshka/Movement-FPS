@@ -111,7 +111,6 @@ public class PlayerMotor : MonoBehaviour
         {
             float horizontalSpeed = new Vector3(_playerVelocity.x, 0, _playerVelocity.z).magnitude;
             float newSpeed = MotionCurves.LinearInterp(horizontalSpeed, _walkSpeed, _sprintSpeed, 1f);
-            Debug.Log("newSpeed: " + newSpeed + " " + horizontalSpeed);
             addVelocity += transform.TransformDirection(moveDirection) * newSpeed;
         }
         else
@@ -135,6 +134,10 @@ public class PlayerMotor : MonoBehaviour
             // crouch walking
 
             addVelocity += transform.TransformDirection(moveDirection) * _walkSpeed;
+
+            // need to ostensibly "stop" our horizontal velocity because we're only going to be moving exactly as far as this method wants
+            _playerVelocity.x = 0;
+            _playerVelocity.z = 0;
         } else
         {
             Vector3 velDirection = _playerVelocity / _playerVelocity.magnitude;
@@ -149,10 +152,6 @@ public class PlayerMotor : MonoBehaviour
             Vector3 frictionUnitVector = -1 * velDirection;
             addVelocity += frictionUnitVector * _slideFrictionDecel * Time.deltaTime;
         }
-
-        // need to ostensibly "stop" our horizontal velocity because we're only going to be moving exactly as far as this method wants
-        _playerVelocity.x = 0;
-        _playerVelocity.z = 0;
 
         return addVelocity;
     }
@@ -232,7 +231,7 @@ public class PlayerMotor : MonoBehaviour
             {
                 _isSliding = false;
             }
-        } else
+        } else if (_isGrounded)
         {
             _isSliding = false;
         }

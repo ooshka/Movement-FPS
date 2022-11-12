@@ -297,13 +297,21 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   cam: {fileID: 15253043}
-  walkSpeed: 4
-  sprintSpeed: 12
-  isCrouched: 0
-  isSprinting: 0
-  isGrounded: 0
-  gravity: -9.8
-  jumpHeight: 3
+  _gravity: -9.8
+  _jumpHeight: 3
+  _walkSpeed: 3
+  _sprintSpeed: 12.99
+  _slideFrictionDecel: 12
+  _airStrafeAccel: 15
+  _slideCutoffVelocity: 0.2
+  _slideStartVelocity: 0
+  _slideBoost: 5
+  _playerVelocity: {x: 0, y: 0, z: 0}
+  _isCrouched: 0
+  _isSliding: 0
+  _wasSliding: 0
+  _isSprinting: 0
+  _isGrounded: 0
 --- !u!114 &2076228525
 MonoBehaviour:
   m_ObjectHideFlags: 0
