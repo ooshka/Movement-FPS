@@ -10,15 +10,15 @@ public class PlayerMotor : MonoBehaviour
 
     public float _gravity = -9.8f;
     public float _jumpHeight = 3f;
-    public float _walkSpeed = 3f;
-    public float _sprintSpeed = 6f;
+    public float _walkSpeed = 6f;
+    public float _sprintSpeed = 12f;
     public float _slideFrictionDecel = 12f;
     public float _airStrafeAccel = 15f;
     public float _slideCutoffVelocity = 0.2f;
     public float _slideStartVelocity;
     public float _slideBoost = 5.0f;
 
-    private Vector3 _playerVelocity;
+    public Vector3 _playerVelocity;
 
     private Vector3 _prevPosition;
     private Vector3 referenceObjectPosition;
@@ -98,10 +98,6 @@ public class PlayerMotor : MonoBehaviour
     {
         Vector3 addVelocity = Vector3.zero;
 
-        // need to ostensibly "stop" our horizontal velocity because we're only going to be moving exactly as far as this method wants
-        _playerVelocity.x = 0;
-        _playerVelocity.z = 0;
-
         if (moveDirection.z > 0 && (int)moveDirection.magnitude == 1)
         {
             _isSprinting = true;
@@ -115,12 +111,17 @@ public class PlayerMotor : MonoBehaviour
         {
             float horizontalSpeed = new Vector3(_playerVelocity.x, 0, _playerVelocity.z).magnitude;
             float newSpeed = MotionCurves.LinearInterp(horizontalSpeed, _walkSpeed, _sprintSpeed, 1f);
+            Debug.Log("newSpeed: " + newSpeed + " " + horizontalSpeed);
             addVelocity += transform.TransformDirection(moveDirection) * newSpeed;
         }
         else
         {
             addVelocity += transform.TransformDirection(moveDirection) * _walkSpeed;
         }
+
+        // need to ostensibly "stop" our horizontal velocity because we're only going to be moving exactly as far as this method wants
+        _playerVelocity.x = 0;
+        _playerVelocity.z = 0;
 
         return addVelocity;
     }
@@ -132,10 +133,6 @@ public class PlayerMotor : MonoBehaviour
         if (!_isSliding)
         {
             // crouch walking
-
-            // need to ostensibly "stop" our horizontal velocity because we're only going to be moving exactly as far as this method wants
-            _playerVelocity.x = 0;
-            _playerVelocity.z = 0;
 
             addVelocity += transform.TransformDirection(moveDirection) * _walkSpeed;
         } else
@@ -152,6 +149,10 @@ public class PlayerMotor : MonoBehaviour
             Vector3 frictionUnitVector = -1 * velDirection;
             addVelocity += frictionUnitVector * _slideFrictionDecel * Time.deltaTime;
         }
+
+        // need to ostensibly "stop" our horizontal velocity because we're only going to be moving exactly as far as this method wants
+        _playerVelocity.x = 0;
+        _playerVelocity.z = 0;
 
         return addVelocity;
     }
