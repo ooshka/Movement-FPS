@@ -5,180 +5,216 @@ public class PlayerMotor : MonoBehaviour
     public Camera cam;
     private CharacterController controller;
 
-    // TODO: Refactor to local variable
-    private Vector3 playerVelocity;
+    private float _standingHeight = 2.0f;
+    private float _crouchedHeight = 1.0f;
 
-    private Vector3 prevPosition;
+    public float _gravity = -9.8f;
+    public float _jumpHeight = 3f;
+    public float _walkSpeed = 6f;
+    public float _sprintSpeed = 12f;
+    public float _slideFrictionDecel = 12f;
+    public float _airStrafeAccel = 15f;
+    public float _airStrafeMaxVelocity = 6f;
+    public float _slideCutoffVelocity = 0.2f;
+    public float _slideStartVelocity;
+    public float _slideBoost = 5.0f;
+
+    public bool _isCrouched;
+    public bool _isJumping;
+    public bool _isSliding = false;
+    public bool _wasSliding;
+    public bool _isSprinting;
+    public bool _isGrounded;
+
+    public Vector3 _playerVelocity;
+
+    private Vector3 _prevPosition;
     private Vector3 referenceObjectPosition;
+    private ControllerColliderHit _lastGroundedHit;
 
-    private float standingHeight = 2.0f;
-    private float crouchedHeight = 1.0f;
 
-    private float horizontalSpeed;
-    public float walkSpeed = 3f;
-    public float sprintSpeed = 6f;
-
-    public bool isCrouched;
-    private bool isSliding = false;
-    public bool isSprinting;
-    private bool isGrounded;
-
-    public float gravity = -9.8f;
-    public float jumpHeight = 3f;
     // Start is called before the first frame update
     void Start()
     {
         controller = GetComponent<CharacterController>();
-        controller.height = standingHeight;
-        prevPosition = transform.position;
+        controller.height = _standingHeight;
+        _prevPosition = transform.position;
+        _slideStartVelocity = 0.95f * _sprintSpeed;
     }
 
     // Update is called once per frame
     void Update()
     {
-        isGrounded = controller.isGrounded;
     }
 
     // receives inputs from input manager script and applies to controller
     // actually happening inside a FixedUpdate
     public void ProcessMove(Vector2 input)
     {
-        if (isGrounded)
-        {
-            horizontalSpeed = new Vector3(playerVelocity.x, 0, playerVelocity.z).magnitude;
-        }
-        HandleCrouchHeightChange();
-
+        Vector3 addedVelocity = Vector3.zero;
         Vector3 moveDirection = new Vector3(input.x, 0, input.y);
 
-        ProcessCharacterMovement(moveDirection);
-        ProcessPhysics(moveDirection);
+        _isGrounded = controller.isGrounded;
 
-    }
-
-    // -----------------------Handle CharacterController-based movement---------------------------------
-
-    private void ProcessCharacterMovement(Vector3 moveDirection)
-    {
-        if (isGrounded)
-        {
-            if (!isCrouched)
-            {
-                HandleGrounded(moveDirection);
-            }
-            else
-            {
-                HandleCrouched(moveDirection);
-            }
-        }
-    }
-
-    private void HandleGrounded(Vector3 moveDirection)
-    {
-        if (isSprinting)
-        {
-            float newSpeed = MotionCurves.LinearInterp(horizontalSpeed, walkSpeed, sprintSpeed, 1f);
-            controller.Move(transform.TransformDirection(moveDirection * newSpeed * Time.deltaTime));
-        }
-        else
-        {
-            controller.Move(transform.TransformDirection(moveDirection * walkSpeed * Time.deltaTime));
-        }
-    }
-
-    private void HandleCrouched(Vector3 moveDirection)
-    {
-        if (!isSliding)
-        {
-            // Crouch walking
-            controller.Move(transform.TransformDirection(moveDirection * walkSpeed * Time.deltaTime));
-        }
-    }
-
-    // --------------------------Handle physics applied to player-------------------------------------------
-
-    private void ProcessPhysics(Vector3 moveDirection)
-    {
+        // need to set our sliding flags regardless of state
         CalcPlayerSliding();
-        if (isGrounded)
+        
+        // possible player states
+        if (_isGrounded)
         {
-            if (playerVelocity.y <= 0.2)
+            // we don't want gravity to continually crank up our negative vert velocity up so reset to some small negative value
+            ResetVerticalVelocity();
+
+            // we can jump in either crouched or walk/sprint mode
+            if (_isJumping)
             {
-                playerVelocity.y = -0.5f;
+                addedVelocity.y += Mathf.Sqrt(-2 * _gravity * _jumpHeight);
             }
-            else
+
+            if (!_isCrouched)
             {
-                // this is here in case we are techincally "grounded" with a positive velocity
-                // might apply gravity to jump twice so may need to redo
-                playerVelocity.y += gravity * Time.deltaTime;
-            }
-            if (!isCrouched)
-            {
-                HandleGroundedPhysics();
+                // grounded
+                addedVelocity += HandleGroundedMovement(moveDirection);
             } else
             {
-                if (isSliding)
-                {
-                    HandleCrouchedPhysics(moveDirection);
-                } else
-                {
-                    playerVelocity.x = 0;
-                    playerVelocity.z = 0;
-                }
+                // crouched
+                addedVelocity += HandleCrouchedMovement(moveDirection);
             }
         } else
         {
-            HandleAirbornPhysics(moveDirection);
+            // airborn
+            addedVelocity += HandleAirbornMovement(moveDirection);
         }
 
-        controller.Move(playerVelocity * Time.deltaTime);
+        // gravity
+        addedVelocity += new Vector3(0, _gravity * Time.deltaTime, 0);
 
+        // change the controller's height
+        HandleCrouchHeightChange();
+
+        // add our new velocity
+        _playerVelocity += addedVelocity;
+
+        // right before we move we need to figure out if we'll be moving down a slope
+        // if so we should add some negative vert velocity so that we "suck" to the slope
+        _playerVelocity.y += DownwardSlopeSucker();
+
+        // move player
+        controller.Move(_playerVelocity * Time.deltaTime);
+
+        // update global velocity
         UpdatePlayerVelocity();
+
+        // reset our jump flag
+        _isJumping = false;
+
     }
 
-    private void HandleGroundedPhysics()
+    private Vector3 HandleGroundedMovement(Vector3 moveDirection)
     {
-        playerVelocity.x = 0;
-        playerVelocity.z = 0;
+        Vector3 addVelocity = Vector3.zero;
+
+        if (moveDirection.z > 0 && (int)moveDirection.magnitude == 1)
+        {
+            _isSprinting = true;
+        }
+        else
+        {
+            _isSprinting = false;
+        }
+
+        if (_isSprinting)
+        {
+            float horizontalSpeed = new Vector3(_playerVelocity.x, 0, _playerVelocity.z).magnitude;
+            float newSpeed = MotionCurves.LinearInterp(horizontalSpeed, _walkSpeed, _sprintSpeed, 1f);
+            addVelocity += transform.TransformDirection(moveDirection) * newSpeed;
+        }
+        else
+        {
+            addVelocity += transform.TransformDirection(moveDirection) * _walkSpeed;
+        }
+
+        // need to ostensibly "stop" our horizontal velocity because we're only going to be moving exactly as far as this method wants
+        _playerVelocity.x = 0;
+        _playerVelocity.z = 0;
+
+        return addVelocity;
     }
 
-    private void HandleCrouchedPhysics(Vector3 moveDirection)
+    private Vector3 HandleCrouchedMovement(Vector3 moveDirection)
     {
-        float frictionAccel = 12f;
-        Vector3 frictionUnitVector = -playerVelocity / playerVelocity.magnitude;
+        Vector3 addVelocity = Vector3.zero;
 
-        playerVelocity += frictionUnitVector * frictionAccel * Time.deltaTime;
+        if (!_isSliding)
+        {
+            // crouch walking
+
+            addVelocity += transform.TransformDirection(moveDirection) * _walkSpeed;
+
+            // need to ostensibly "stop" our horizontal velocity because we're only going to be moving exactly as far as this method wants
+            _playerVelocity.x = 0;
+            _playerVelocity.z = 0;
+        } else
+        {
+            Vector3 velDirection = _playerVelocity / _playerVelocity.magnitude;
+
+            // we be boostin
+            if (_wasSliding == false)
+            {
+                Vector3 _slideBoostVelocity = velDirection * _slideBoost;
+                addVelocity += _slideBoostVelocity;
+            }
+
+            Vector3 frictionUnitVector = -1 * velDirection;
+            addVelocity += frictionUnitVector * _slideFrictionDecel * Time.deltaTime;
+        }
+
+        return addVelocity;
     }
 
-    private void HandleAirbornPhysics(Vector3 moveDirection)
+    private Vector3 HandleAirbornMovement(Vector3 moveDirection)
     {
+        Vector3 addVelocity = Vector3.zero;
+
         if (moveDirection.magnitude > 0)
         {
 
             // x-plane movement
             Vector3 xDirection = transform.TransformDirection(new Vector3(moveDirection.x, 0, 0));
-            playerVelocity += AddVelocityInDirection(playerVelocity, xDirection, 15.0f, walkSpeed);
+            addVelocity += AddVelocityInDirection(_playerVelocity, xDirection, _airStrafeAccel, _airStrafeMaxVelocity);
 
             // z-plane movement
             Vector3 zDirection = transform.TransformDirection(new Vector3(0, 0, moveDirection.z));
-            playerVelocity += AddVelocityInDirection(playerVelocity, zDirection, 15.0f, walkSpeed);
+            addVelocity += AddVelocityInDirection(_playerVelocity, zDirection, _airStrafeAccel, _airStrafeMaxVelocity);
 
         }
 
-        playerVelocity.y += gravity * Time.deltaTime;
-    }
-
-    private void UpdatePlayerVelocity()
-    {
-        Vector3 relativePositionDiff = (transform.position) - (prevPosition);
-        playerVelocity = relativePositionDiff / Time.deltaTime;
-        prevPosition = transform.position;
+        return addVelocity;
     }
 
     // ---------------------------Util Methods--------------------------------------------------------------
 
+    private void UpdatePlayerVelocity()
+    {
+        Vector3 relativePositionDiff = (transform.position) - (_prevPosition);
+        _playerVelocity = relativePositionDiff / Time.deltaTime;
+        _prevPosition = transform.position;
+    }
 
-    public Vector3 AddVelocityInDirection(Vector3 currentVelocity, Vector3 direction, float acceleration, float maxVelocity)
+    private void ResetVerticalVelocity()
+    {
+        // we want to slightly stick to the ground to keep our grounded check alive
+        // and also don't want gravity to continually increase our negative y vel if we're grounded
+
+        // also want to check to see if we're jumping.  if we're not, but we have a pos y vel we should reset it
+        // so we don't go flying off every little bump
+        if (_playerVelocity.y <= 0.2 || (!_isJumping && _playerVelocity.y > 0))
+        {
+            _playerVelocity.y = -0.5f;
+        }
+    }
+
+    private Vector3 AddVelocityInDirection(Vector3 currentVelocity, Vector3 direction, float acceleration, float maxVelocity)
     {
         float velInMoveDirection = Vector3.Dot(direction, currentVelocity) / direction.magnitude;
 
@@ -196,35 +232,30 @@ public class PlayerMotor : MonoBehaviour
 
     public void Jump()
     {
-        if (isGrounded)
+        if (_isGrounded)
         {
-            playerVelocity.y = Mathf.Sqrt(-2 * gravity * jumpHeight);
+            // set a flag here so we know we're jumping and can set proper velocity in normal flow
+            _isJumping = true;
         }
     }
 
     private void CalcPlayerSliding()
     {
-        float slideCutoffVelocity = 0.2f;
+        // have some handle on the previous frame's slide value so we can boost
+        _wasSliding = _isSliding;
 
-        if (isCrouched && isGrounded)
+        if (_isCrouched && _isGrounded)
         {
-            if (playerVelocity.magnitude >= sprintSpeed * 0.95f)
+            if (_playerVelocity.magnitude >= _slideStartVelocity)
             {
-                if (isSliding == false)
-                {
-                    float slideBoost = 5f;
-                    Vector3 slideBoostVector = playerVelocity / playerVelocity.magnitude * slideBoost;
-                    playerVelocity += slideBoostVector;
-                }
-                isSliding = true;
-            } else if (playerVelocity.magnitude < slideCutoffVelocity)
+                _isSliding = true;
+            } else if (_playerVelocity.magnitude < _slideCutoffVelocity)
             {
-                isSliding = false;
+                _isSliding = false;
             }
-
-        } else if (isGrounded)
+        } else if (_isGrounded)
         {
-            isSliding = false;
+            _isSliding = false;
         }
     }
 
@@ -233,28 +264,59 @@ public class PlayerMotor : MonoBehaviour
        float crouchTime = 0.25f;
         float newHeight = 0f;
 
-       if (isCrouched)
+       if (_isCrouched)
         {
-            if (controller.height != crouchedHeight)
+            if (controller.height != _crouchedHeight)
             {
-                newHeight = MotionCurves.LinearInterp(controller.height, standingHeight, crouchedHeight, crouchTime);
+                newHeight = MotionCurves.LinearInterp(controller.height, _standingHeight, _crouchedHeight, crouchTime);
             }
         } else
         {
-            if (controller.height != standingHeight)
+            if (controller.height != _standingHeight)
             {
-                newHeight = MotionCurves.LinearInterp(controller.height, crouchedHeight, standingHeight, crouchTime);
+                newHeight = MotionCurves.LinearInterp(controller.height, _crouchedHeight, _standingHeight, crouchTime);
             }
         }
         // ensure we've actually updated to a new height
         if (newHeight != 0)
         {
-            controller.center = Vector3.down * (standingHeight - newHeight) / 2f;
+            controller.center = Vector3.down * (_standingHeight - newHeight) / 2f;
             controller.height = newHeight;
 
-            // hardcoded camera heiht (awful). will fix with model animations
-            cam.transform.localPosition = new Vector3(0 , 1.4f * newHeight / standingHeight - 0.8f, 0);
+            // hardcoded camera height (awful). will fix with model animations
+            cam.transform.localPosition = new Vector3(0 , 1.4f * newHeight / _standingHeight - 0.8f, 0);
         }
+    }
+
+    private float DownwardSlopeSucker()
+    {
+        float suckVelocity = 0f;
+        float buffer = 1.1f;
+
+        if (_isGrounded && _lastGroundedHit != null && !_isJumping)
+        {
+            Vector3 slopeNormal = _lastGroundedHit.normal;
+
+            // the amount of our current velocity in the direction of the surface normal
+            float velocityNormalComponent = (Vector3.Dot(_playerVelocity, slopeNormal) / slopeNormal.magnitude);
+
+            // if we have some component in normal direction (down the slope)
+            if (velocityNormalComponent > 0)
+            {
+                // the angle between the surface normal we are standing on and the vertical axis (i.e. the slope of the surface)
+                float theta = Mathf.Acos(Vector3.Dot(slopeNormal, Vector3.up) / (slopeNormal.magnitude * Vector3.up.magnitude));
+
+                // if we're allowed to walk on it
+                if (theta * Mathf.Rad2Deg < controller.slopeLimit)
+                {
+                    // the amount to suck the player down so they remain on the slope
+                    suckVelocity = -1 * velocityNormalComponent / Mathf.Cos(theta);
+                }
+            }
+        }
+        Debug.Log(suckVelocity * buffer);
+
+        return suckVelocity *= buffer;
     }
 
     public void OnControllerColliderHit(ControllerColliderHit hit)
@@ -270,6 +332,7 @@ public class PlayerMotor : MonoBehaviour
         if (Mathf.Abs(playerCenterY - playerExtentY - hit.point.y) < groundCollisionThreshold)
         {
             referenceObjectPosition = transform.position;
+            _lastGroundedHit = hit;
         }
     }
 
