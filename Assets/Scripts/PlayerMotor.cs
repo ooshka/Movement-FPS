@@ -293,7 +293,7 @@ public class PlayerMotor : MonoBehaviour
         float suckVelocity = 0f;
         float buffer = 1.1f;
 
-        if (_isGrounded && _lastGroundedHit != null)
+        if (_isGrounded && _lastGroundedHit != null && !_isJumping)
         {
             Vector3 slopeNormal = _lastGroundedHit.normal;
 
@@ -314,6 +314,7 @@ public class PlayerMotor : MonoBehaviour
                 }
             }
         }
+        Debug.Log(suckVelocity * buffer);
 
         return suckVelocity *= buffer;
     }
