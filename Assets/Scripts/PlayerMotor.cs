@@ -19,17 +19,18 @@ public class PlayerMotor : MonoBehaviour
     public float _slideStartVelocity;
     public float _slideBoost = 5.0f;
 
-    public Vector3 _playerVelocity;
-
-    private Vector3 _prevPosition;
-    private Vector3 referenceObjectPosition;
-
     public bool _isCrouched;
     public bool _isJumping;
     public bool _isSliding = false;
     public bool _wasSliding;
     public bool _isSprinting;
     public bool _isGrounded;
+
+    public Vector3 _playerVelocity;
+
+    private Vector3 _prevPosition;
+    private Vector3 referenceObjectPosition;
+    private ControllerColliderHit _lastGroundedHit;
 
 
     // Start is called before the first frame update
@@ -93,6 +94,10 @@ public class PlayerMotor : MonoBehaviour
 
         // add our new velocity
         _playerVelocity += addedVelocity;
+
+        // right before we move we need to figure out if we'll be moving down a slope
+        // if so we should add some negative vert velocity so that we "suck" to the slope
+        _playerVelocity.y += DownwardSlopeSucker();
 
         // move player
         controller.Move(_playerVelocity * Time.deltaTime);
@@ -283,6 +288,36 @@ public class PlayerMotor : MonoBehaviour
         }
     }
 
+    private float DownwardSlopeSucker()
+    {
+        float suckVelocity = 0f;
+        float buffer = 1.1f;
+
+        if (_isGrounded && _lastGroundedHit != null)
+        {
+            Vector3 slopeNormal = _lastGroundedHit.normal;
+
+            // the amount of our current velocity in the direction of the surface normal
+            float velocityNormalComponent = (Vector3.Dot(_playerVelocity, slopeNormal) / slopeNormal.magnitude);
+
+            // if we have some component in normal direction (down the slope)
+            if (velocityNormalComponent > 0)
+            {
+                // the angle between the surface normal we are standing on and the vertical axis (i.e. the slope of the surface)
+                float theta = Mathf.Acos(Vector3.Dot(slopeNormal, Vector3.up) / (slopeNormal.magnitude * Vector3.up.magnitude));
+
+                // if we're allowed to walk on it
+                if (theta * Mathf.Rad2Deg < controller.slopeLimit)
+                {
+                    // the amount to suck the player down so they remain on the slope
+                    suckVelocity = -1 * velocityNormalComponent / Mathf.Cos(theta);
+                }
+            }
+        }
+
+        return suckVelocity *= buffer;
+    }
+
     public void OnControllerColliderHit(ControllerColliderHit hit)
     {
         float groundCollisionThreshold = 0.1f;
@@ -296,6 +331,7 @@ public class PlayerMotor : MonoBehaviour
         if (Mathf.Abs(playerCenterY - playerExtentY - hit.point.y) < groundCollisionThreshold)
         {
             referenceObjectPosition = transform.position;
+            _lastGroundedHit = hit;
         }
     }
 
