@@ -24,6 +24,7 @@ public class PlayerMotor : MonoBehaviour
     private Vector3 referenceObjectPosition;
 
     public bool _isCrouched;
+    public bool _isJumping;
     public bool _isSliding = false;
     public bool _wasSliding;
     public bool _isSprinting;
@@ -62,6 +63,12 @@ public class PlayerMotor : MonoBehaviour
             // we don't want gravity to continually crank up our negative vert velocity up so reset to some small negative value
             ResetVerticalVelocity();
 
+            // we can jump in either crouched or walk/sprint mode
+            if (_isJumping)
+            {
+                addedVelocity.y += Mathf.Sqrt(-2 * _gravity * _jumpHeight);
+            }
+
             if (!_isCrouched)
             {
                 // grounded
@@ -91,6 +98,9 @@ public class PlayerMotor : MonoBehaviour
 
         // update global velocity
         UpdatePlayerVelocity();
+
+        // reset our jump flag
+        _isJumping = false;
 
     }
 
@@ -187,7 +197,12 @@ public class PlayerMotor : MonoBehaviour
 
     private void ResetVerticalVelocity()
     {
-        if (_playerVelocity.y <= 0.2)
+        // we want to slightly stick to the ground to keep our grounded check alive
+        // and also don't want gravity to continually increase our negative y vel if we're grounded
+
+        // also want to check to see if we're jumping.  if we're not, but we have a pos y vel we should reset it
+        // so we don't go flying off every little bump
+        if (_playerVelocity.y <= 0.2 || (!_isJumping && _playerVelocity.y > 0))
         {
             _playerVelocity.y = -0.5f;
         }
@@ -213,7 +228,8 @@ public class PlayerMotor : MonoBehaviour
     {
         if (_isGrounded)
         {
-            _playerVelocity.y = Mathf.Sqrt(-2 * _gravity * _jumpHeight);
+            // set a flag here so we know we're jumping and can set proper velocity in normal flow
+            _isJumping = true;
         }
     }
 
