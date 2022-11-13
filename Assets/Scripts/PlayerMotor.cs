@@ -14,6 +14,7 @@ public class PlayerMotor : MonoBehaviour
     public float _sprintSpeed = 12f;
     public float _slideFrictionDecel = 12f;
     public float _airStrafeAccel = 15f;
+    public float _airStrafeMaxVelocity = 6f;
     public float _slideCutoffVelocity = 0.2f;
     public float _slideStartVelocity;
     public float _slideBoost = 5.0f;
@@ -175,11 +176,11 @@ public class PlayerMotor : MonoBehaviour
 
             // x-plane movement
             Vector3 xDirection = transform.TransformDirection(new Vector3(moveDirection.x, 0, 0));
-            addVelocity += AddVelocityInDirection(_playerVelocity, xDirection, _airStrafeAccel, _walkSpeed);
+            addVelocity += AddVelocityInDirection(_playerVelocity, xDirection, _airStrafeAccel, _airStrafeMaxVelocity);
 
             // z-plane movement
             Vector3 zDirection = transform.TransformDirection(new Vector3(0, 0, moveDirection.z));
-            addVelocity += AddVelocityInDirection(_playerVelocity, zDirection, _airStrafeAccel, _walkSpeed);
+            addVelocity += AddVelocityInDirection(_playerVelocity, zDirection, _airStrafeAccel, _airStrafeMaxVelocity);
 
         }
 
