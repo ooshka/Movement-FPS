@@ -12,6 +12,7 @@ public class PlayerMotor : MonoBehaviour
     public float _jumpHeight = 3f;
     public float _walkSpeed = 6f;
     public float _sprintSpeed = 12f;
+    public float _sprintStrafeSpeed = 6f;
     public float _slideFrictionDecel = 12f;
     public float _airStrafeAccel = 15f;
     public float _airStrafeMaxVelocity = 6f;
@@ -127,7 +128,24 @@ public class PlayerMotor : MonoBehaviour
         {
             float horizontalSpeed = new Vector3(_playerVelocity.x, 0, _playerVelocity.z).magnitude;
             float newSpeed = MotionCurves.LinearInterp(horizontalSpeed, _walkSpeed, _sprintSpeed, 1f);
-            addVelocity += transform.TransformDirection(moveDirection) * newSpeed;
+
+
+            float xMoveComponent = moveDirection.x;
+            float zMoveComponent = moveDirection.z;
+
+            if (moveDirection.x != 0)
+            {
+                // if we have a/d pressed we don't want a full sprint in the diagonal, 
+                // so skew the unit vector direction based on the max sprint strafe speed
+
+                // end term is just to preserve the sign of the original input
+                xMoveComponent = _sprintStrafeSpeed / _sprintSpeed * xMoveComponent/Mathf.Abs(xMoveComponent);
+
+                // now we need to find the z component that will preserve unit-ness of the vector
+                // no need to preserve sign here cause we can only sprint forward
+                zMoveComponent = Mathf.Sqrt(1 - Mathf.Pow(xMoveComponent, 2));
+            }
+            addVelocity += transform.TransformDirection(new Vector3(xMoveComponent, 0, zMoveComponent)) * newSpeed;
         }
         else
         {
@@ -314,7 +332,6 @@ public class PlayerMotor : MonoBehaviour
                 }
             }
         }
-        Debug.Log(suckVelocity * buffer);
 
         return suckVelocity *= buffer;
     }
