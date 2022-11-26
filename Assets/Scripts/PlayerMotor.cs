@@ -13,12 +13,13 @@ public class PlayerMotor : MonoBehaviour
     public float _walkSpeed = 6f;
     public float _sprintSpeed = 12f;
     public float _sprintStrafeSpeed = 6f;
-    public float _slideFrictionDecel = 12f;
     public float _airStrafeAccel = 15f;
     public float _airStrafeMaxVelocity = 6f;
     public float _slideCutoffVelocity = 0.2f;
     public float _slideStartVelocity;
+    public float _slideFrictionDecel = 12f;
     public float _slideBoost = 5.0f;
+    public float _slopeFrictionModifier = 10f;
 
     public bool _isCrouched;
     public bool _isJumping;
@@ -183,8 +184,22 @@ public class PlayerMotor : MonoBehaviour
                 addVelocity += _slideBoostVelocity;
             }
 
+            // let the slope boost or impede us based on angle
+            float slopeInfluence = 0;
+            if (_lastGroundedHit != null)
+            {
+                Vector3 slopeNormal = _lastGroundedHit.normal;
+                // only really worry about our horizontal velocity
+                Vector3 horizontalVelocity = new Vector3(_playerVelocity.x, 0, _playerVelocity.z);
+                // take the negative of this so that uphill gives a positive value and downhill gives negative
+                float cosTheta = -1 * Vector3.Dot(horizontalVelocity, slopeNormal) / (horizontalVelocity.magnitude * slopeNormal.magnitude);
+                slopeInfluence = cosTheta * _slopeFrictionModifier;    
+            }
+            Debug.Log(slopeInfluence);
+            float frictionAmount = (_slideFrictionDecel + slopeInfluence) * Time.deltaTime;
+
             Vector3 frictionUnitVector = -1 * velDirection;
-            addVelocity += frictionUnitVector * _slideFrictionDecel * Time.deltaTime;
+            addVelocity += frictionUnitVector * frictionAmount;
         }
 
         return addVelocity;
