@@ -64,7 +64,7 @@ public class PlayerMotor : MonoBehaviour
         if (_isGrounded)
         {
             // we don't want gravity to continually crank up our negative vert velocity up so reset to some small negative value
-            ResetVerticalVelocity();
+            ResetGroundedVelocity();
 
             // we can jump in either crouched or walk/sprint mode
             if (_isJumping)
@@ -219,17 +219,36 @@ public class PlayerMotor : MonoBehaviour
         _prevPosition = transform.position;
     }
 
-    private void ResetVerticalVelocity()
+    private void ResetGroundedVelocity()
     {
         // we want to slightly stick to the ground to keep our grounded check alive
         // and also don't want gravity to continually increase our negative y vel if we're grounded
 
-        // also want to check to see if we're jumping.  if we're not, but we have a pos y vel we should reset it
-        // so we don't go flying off every little bump
-        if (_playerVelocity.y <= 0.2 || (!_isJumping && _playerVelocity.y > 0))
+        // make sure some there is a handle on our last surface
+        if (_lastGroundedHit != null)
         {
-            _playerVelocity.y = -0.5f;
+            // but to handle slopes we should reset the velocity in the direction of the ground
+            // and we want the negative normal so it's pointing into the ground
+            Vector3 slopeNormal = -_lastGroundedHit.normal;
+
+            float velComponentTowardsSlope = Vector3.Dot(_playerVelocity, slopeNormal) / slopeNormal.magnitude;
+            if (velComponentTowardsSlope >= 0.1f || (!_isJumping && velComponentTowardsSlope < 0.2f))
+            {
+                Debug.Log(velComponentTowardsSlope);
+                float resetComponent = 0.2f - velComponentTowardsSlope;
+                _playerVelocity += resetComponent * slopeNormal;
+                velComponentTowardsSlope = Vector3.Dot(_playerVelocity, slopeNormal) / slopeNormal.magnitude;
+            }
         }
+        else
+        {
+            // just handle the regular case
+            if (_playerVelocity.y <= 0.2 || (!_isJumping && _playerVelocity.y > 0))
+            {
+                _playerVelocity.y = -0.5f;
+            }
+        }
+
     }
 
     private Vector3 AddVelocityInDirection(Vector3 currentVelocity, Vector3 direction, float acceleration, float maxVelocity)
