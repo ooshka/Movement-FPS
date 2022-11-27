@@ -8,16 +8,20 @@ public class PlayerMotor : MonoBehaviour
     private float _standingHeight = 2.0f;
     private float _crouchedHeight = 1.0f;
 
-    public float _gravity = -9.8f;
+    public float _gravity = -15f;
     public float _jumpHeight = 3f;
-    public float _walkSpeed = 6f;
-    public float _sprintSpeed = 12f;
-    public float _slideFrictionDecel = 12f;
-    public float _airStrafeAccel = 15f;
-    public float _airStrafeMaxVelocity = 6f;
+    public float _walkSpeed = 7f;
+    public float _sprintSpeed = 15f;
+    public float _sprintStrafeSpeed = 7f;
+    public float _sprintAccelTime = 0.75f;
+    public float _airStrafeAccel = 30f;
+    public float _airStrafeMaxVelocity = 7f;
     public float _slideCutoffVelocity = 0.2f;
     public float _slideStartVelocity;
-    public float _slideBoost = 5.0f;
+    public float _slideFrictionDecel = 12f;
+    public float _slideBoost = 7.0f;
+    public float _positiveSlopeSlideFactor = 20f;
+    public float _negativeSlopeSlideFactor = 40f;
 
     public bool _isCrouched;
     public bool _isJumping;
@@ -126,8 +130,25 @@ public class PlayerMotor : MonoBehaviour
         if (_isSprinting)
         {
             float horizontalSpeed = new Vector3(_playerVelocity.x, 0, _playerVelocity.z).magnitude;
-            float newSpeed = MotionCurves.LinearInterp(horizontalSpeed, _walkSpeed, _sprintSpeed, 1f);
-            addVelocity += transform.TransformDirection(moveDirection) * newSpeed;
+            float newSpeed = MotionCurves.LinearInterp(horizontalSpeed, _walkSpeed, _sprintSpeed, _sprintAccelTime);
+
+
+            float xMoveComponent = moveDirection.x;
+            float zMoveComponent = moveDirection.z;
+
+            if (moveDirection.x != 0)
+            {
+                // if we have a/d pressed we don't want a full sprint in the diagonal, 
+                // so skew the unit vector direction based on the max sprint strafe speed
+
+                // end term is just to preserve the sign of the original input
+                xMoveComponent = _sprintStrafeSpeed / _sprintSpeed * xMoveComponent/Mathf.Abs(xMoveComponent);
+
+                // now we need to find the z component that will preserve unit-ness of the vector
+                // no need to preserve sign here cause we can only sprint forward
+                zMoveComponent = Mathf.Sqrt(1 - Mathf.Pow(xMoveComponent, 2));
+            }
+            addVelocity += transform.TransformDirection(new Vector3(xMoveComponent, 0, zMoveComponent)) * newSpeed;
         }
         else
         {
@@ -165,8 +186,28 @@ public class PlayerMotor : MonoBehaviour
                 addVelocity += _slideBoostVelocity;
             }
 
+            // let the slope boost or impede us based on angle
+            float slopeInfluence = 0;
+            if (_lastGroundedHit != null)
+            {
+                Vector3 slopeNormal = _lastGroundedHit.normal;
+                // only really worry about our horizontal velocity
+                Vector3 horizontalVelocity = new Vector3(_playerVelocity.x, 0, _playerVelocity.z);
+                // take the negative of this so that uphill gives a positive value and downhill gives negative
+                float cosTheta = -1 * Vector3.Dot(horizontalVelocity, slopeNormal) / (horizontalVelocity.magnitude * slopeNormal.magnitude);
+                if (cosTheta > 0)
+                {
+                    slopeInfluence = cosTheta * _positiveSlopeSlideFactor;
+                } else
+                {
+                    slopeInfluence = cosTheta * _negativeSlopeSlideFactor;
+                }
+                  
+            }
+            float frictionAmount = (_slideFrictionDecel + slopeInfluence) * Time.deltaTime;
+
             Vector3 frictionUnitVector = -1 * velDirection;
-            addVelocity += frictionUnitVector * _slideFrictionDecel * Time.deltaTime;
+            addVelocity += frictionUnitVector * frictionAmount;
         }
 
         return addVelocity;
@@ -314,7 +355,6 @@ public class PlayerMotor : MonoBehaviour
                 }
             }
         }
-        Debug.Log(suckVelocity * buffer);
 
         return suckVelocity *= buffer;
     }
