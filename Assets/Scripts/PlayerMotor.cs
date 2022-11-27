@@ -20,7 +20,8 @@ public class PlayerMotor : MonoBehaviour
     public float _slideStartVelocity;
     public float _slideFrictionDecel = 12f;
     public float _slideBoost = 7.0f;
-    public float _slopeFrictionModifier = 40f;
+    public float _positiveSlopeSlideFactor = 20f;
+    public float _negativeSlopeSlideFactor = 40f;
 
     public bool _isCrouched;
     public bool _isJumping;
@@ -194,7 +195,14 @@ public class PlayerMotor : MonoBehaviour
                 Vector3 horizontalVelocity = new Vector3(_playerVelocity.x, 0, _playerVelocity.z);
                 // take the negative of this so that uphill gives a positive value and downhill gives negative
                 float cosTheta = -1 * Vector3.Dot(horizontalVelocity, slopeNormal) / (horizontalVelocity.magnitude * slopeNormal.magnitude);
-                slopeInfluence = cosTheta * _slopeFrictionModifier;    
+                if (cosTheta > 0)
+                {
+                    slopeInfluence = cosTheta * _positiveSlopeSlideFactor;
+                } else
+                {
+                    slopeInfluence = cosTheta * _negativeSlopeSlideFactor;
+                }
+                  
             }
             float frictionAmount = (_slideFrictionDecel + slopeInfluence) * Time.deltaTime;
 
