@@ -9,6 +9,7 @@ public class InputManager : MonoBehaviour
     private PlayerInput.GroundedActions groundedActions;
     private PlayerLook look;
     private PlayerMotor motor;
+
     // Start is called before the first frame update
     void Awake()
     {
