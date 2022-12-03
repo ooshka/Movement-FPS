@@ -22,6 +22,7 @@ public class PlayerMotor : MonoBehaviour
     public float _slideBoost = 7.0f;
     public float _positiveSlopeSlideFactor = 20f;
     public float _negativeSlopeSlideFactor = 40f;
+    public float _groundCollisionThreshold = 0.2f;
 
     public bool _isCrouched;
     public bool _isJumping;
@@ -29,6 +30,7 @@ public class PlayerMotor : MonoBehaviour
     public bool _wasSliding;
     public bool _isSprinting;
     public bool _isGrounded;
+    public bool _secondaryGroundedCheck;
 
     public Vector3 _playerVelocity;
 
@@ -58,7 +60,14 @@ public class PlayerMotor : MonoBehaviour
         Vector3 addedVelocity = Vector3.zero;
         Vector3 moveDirection = new Vector3(input.x, 0, input.y);
 
-        _isGrounded = controller.isGrounded;
+        // controller.isGrounded is giving poor results
+        // utilize a secondary grounded check based on the CapsuleCollider of the CharacterController
+        _isGrounded = controller.isGrounded || _secondaryGroundedCheck;
+
+        _secondaryGroundedCheck = false;
+        
+        // change the controller's height
+        HandleCrouchHeightChange();
 
         // need to set our sliding flags regardless of state
         CalcPlayerSliding();
@@ -92,9 +101,6 @@ public class PlayerMotor : MonoBehaviour
 
         // gravity
         addedVelocity += new Vector3(0, _gravity * Time.deltaTime, 0);
-
-        // change the controller's height
-        HandleCrouchHeightChange();
 
         // add our new velocity
         _playerVelocity += addedVelocity;
@@ -247,8 +253,7 @@ public class PlayerMotor : MonoBehaviour
         // we want to slightly stick to the ground to keep our grounded check alive
         // and also don't want gravity to continually increase our negative y vel if we're grounded
 
-        // also want to check to see if we're jumping.  if we're not, but we have a pos y vel we should reset it
-        // so we don't go flying off every little bump
+        // also want to not go flying off every little bump so reset y vel if we need to
         if (_playerVelocity.y <= 0.2 || (_playerVelocity.y > 0))
         {
             _playerVelocity.y = -0.5f;
@@ -361,7 +366,6 @@ public class PlayerMotor : MonoBehaviour
 
     public void OnControllerColliderHit(ControllerColliderHit hit)
     {
-        float groundCollisionThreshold = 0.1f;
 
         Collider collider = GetComponent<Collider>();
         float playerCenterY = collider.bounds.center.y;
@@ -369,10 +373,11 @@ public class PlayerMotor : MonoBehaviour
 
         // check to see if the object we hit is the one we are standing on
         // do this by seeing if the y coordinate of the collision matches up with the bottom of the capsule collider
-        if (Mathf.Abs(playerCenterY - playerExtentY - hit.point.y) < groundCollisionThreshold)
+        if (Mathf.Abs(playerCenterY - playerExtentY - hit.point.y) < _groundCollisionThreshold)
         {
             referenceObjectPosition = transform.position;
             _lastGroundedHit = hit;
+            _secondaryGroundedCheck = true;
         }
     }
 
