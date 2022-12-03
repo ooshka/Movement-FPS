@@ -249,7 +249,7 @@ public class PlayerMotor : MonoBehaviour
 
         // also want to check to see if we're jumping.  if we're not, but we have a pos y vel we should reset it
         // so we don't go flying off every little bump
-        if (_playerVelocity.y <= 0.2 || (!_isJumping && _playerVelocity.y > 0))
+        if (_playerVelocity.y <= 0.2 || (_playerVelocity.y > 0))
         {
             _playerVelocity.y = -0.5f;
         }
