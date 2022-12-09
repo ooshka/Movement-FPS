@@ -309,13 +309,19 @@ MonoBehaviour:
   _slideStartVelocity: 0
   _slideFrictionDecel: 12
   _slideBoost: 7
-  _slopeFrictionModifier: 40
+  _positiveSlopeSlideFactor: 20
+  _negativeSlopeSlideFactor: 40
+  _groundCollisionThreshold: 0.2
+  _meleeDistance: 1
+  _punchBoost: 5
   _isCrouched: 0
   _isJumping: 0
+  _isMeleeing: 0
   _isSliding: 0
   _wasSliding: 0
   _isSprinting: 0
   _isGrounded: 0
+  _secondaryGroundedCheck: 0
   _playerVelocity: {x: 0, y: 0, z: 0}
 --- !u!114 &2076228525
 MonoBehaviour:

@@ -23,9 +23,12 @@ public class PlayerMotor : MonoBehaviour
     public float _positiveSlopeSlideFactor = 20f;
     public float _negativeSlopeSlideFactor = 40f;
     public float _groundCollisionThreshold = 0.2f;
+    public float _meleeDistance = 2f;
+    public float _punchBoost = 15f;
 
     public bool _isCrouched;
     public bool _isJumping;
+    public bool _isMeleeing;
     public bool _isSliding = false;
     public bool _wasSliding;
     public bool _isSprinting;
@@ -71,7 +74,15 @@ public class PlayerMotor : MonoBehaviour
 
         // need to set our sliding flags regardless of state
         CalcPlayerSliding();
-        
+
+        // handle melee behaviour
+        // breaks state machine a bit cause we need to check individual states within this,
+        // but it happens across lots of states so who's to say what's best
+        if (_isMeleeing)
+        {
+            addedVelocity += HandleMelee();
+        }
+
         // possible player states
         if (_isGrounded)
         {
@@ -115,8 +126,9 @@ public class PlayerMotor : MonoBehaviour
         // update global velocity
         UpdatePlayerVelocity();
 
-        // reset our jump flag
+        // reset our various flags
         _isJumping = false;
+        _isMeleeing = false;
 
     }
 
@@ -239,6 +251,27 @@ public class PlayerMotor : MonoBehaviour
         return addVelocity;
     }
 
+    private Vector3 HandleMelee()
+    {
+        Vector3 addedVelocity = Vector3.zero;
+        RaycastHit hit;
+
+        Debug.Log("Meleeing");
+        if (Physics.Raycast(cam.transform.position, cam.transform.forward, out hit, _meleeDistance))
+        {
+            Debug.Log("Hit target");
+            // TODO: deal with regular damaging tings
+            // maybe we even have seperate punch boost/melee attack buttons
+
+            // only want to punch boost if we are crouched or airborne
+            if (!_isGrounded || (_isGrounded && _isCrouched))
+            {
+                addedVelocity += (-cam.transform.forward.normalized * _punchBoost);
+            }
+        }
+        return addedVelocity;
+    }
+
     // ---------------------------Util Methods--------------------------------------------------------------
 
     private void UpdatePlayerVelocity()
@@ -283,6 +316,11 @@ public class PlayerMotor : MonoBehaviour
             // set a flag here so we know we're jumping and can set proper velocity in normal flow
             _isJumping = true;
         }
+    }
+
+    public void Melee()
+    {
+        _isMeleeing = true;
     }
 
     private void CalcPlayerSliding()
