@@ -4,27 +4,26 @@ public class PlayerMotor : MonoBehaviour
 {
     public Camera cam;
     private CharacterController controller;
-
-    private float _standingHeight = 2.0f;
-    private float _crouchedHeight = 1.0f;
+    private float _standingHeight = 1.4f;
+    private float _crouchedHeight = 0.7f;
 
     public float _gravity = -15f;
-    public float _jumpHeight = 3f;
-    public float _walkSpeed = 7f;
-    public float _sprintSpeed = 15f;
-    public float _sprintStrafeSpeed = 7f;
+    public float _jumpHeight = 1.2f;
+    public float _walkSpeed = 4f;
+    public float _sprintSpeed = 8f;
+    public float _sprintStrafeSpeed = 4f;
     public float _sprintAccelTime = 0.75f;
-    public float _airStrafeAccel = 30f;
-    public float _airStrafeMaxVelocity = 7f;
+    public float _airStrafeAccel = 10f;
+    public float _airStrafeMaxVelocity = 8f;
     public float _slideCutoffVelocity = 0.2f;
     public float _slideStartVelocity;
     public float _slideFrictionDecel = 12f;
-    public float _slideBoost = 7.0f;
+    public float _slideBoost = 4.0f;
     public float _positiveSlopeSlideFactor = 20f;
     public float _negativeSlopeSlideFactor = 40f;
     public float _groundCollisionThreshold = 0.2f;
     public float _meleeDistance = 2f;
-    public float _punchBoost = 15f;
+    public float _punchBoost = 8f;
 
     public bool _isCrouched;
     public bool _isJumping;
@@ -255,18 +254,18 @@ public class PlayerMotor : MonoBehaviour
     {
         Vector3 addedVelocity = Vector3.zero;
         RaycastHit hit;
-
-        Debug.Log("Meleeing");
         if (Physics.Raycast(cam.transform.position, cam.transform.forward, out hit, _meleeDistance))
         {
-            Debug.Log("Hit target");
-            // TODO: deal with regular damaging tings
-            // maybe we even have seperate punch boost/melee attack buttons
-
-            // only want to punch boost if we are crouched or airborne
-            if (!_isGrounded || (_isGrounded && _isCrouched))
+            if (hit.collider != null)
             {
-                addedVelocity += (-cam.transform.forward.normalized * _punchBoost);
+                // TODO: deal with regular damaging tings
+                // maybe we even have seperate punch boost/melee attack buttons
+
+                // only want to punch boost if we are crouched or airborne
+                if (!_isGrounded || (_isGrounded && _isCrouched))
+                {
+                    addedVelocity += (-cam.transform.forward.normalized * _punchBoost);
+                }
             }
         }
         return addedVelocity;
