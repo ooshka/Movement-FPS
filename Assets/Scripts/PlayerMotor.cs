@@ -4,8 +4,8 @@ public class PlayerMotor : MonoBehaviour
 {
     public Camera cam;
     private CharacterController controller;
-    private float _standingHeight = 1.4f;
-    private float _crouchedHeight = 0.7f;
+    private float _standingHeight = 2f;
+    private float _crouchedHeight = 1f;
 
     public float _gravity = -15f;
     public float _jumpHeight = 1.2f;
@@ -62,6 +62,8 @@ public class PlayerMotor : MonoBehaviour
         Vector3 addedVelocity = Vector3.zero;
         Vector3 moveDirection = new Vector3(input.x, 0, input.y);
 
+        Debug.Log("Starting y: " + _playerVelocity.y);
+
         // controller.isGrounded is giving poor results
         // utilize a secondary grounded check based on the CapsuleCollider of the CharacterController
         _isGrounded = controller.isGrounded || _secondaryGroundedCheck;
@@ -73,14 +75,6 @@ public class PlayerMotor : MonoBehaviour
 
         // need to set our sliding flags regardless of state
         CalcPlayerSliding();
-
-        // handle melee behaviour
-        // breaks state machine a bit cause we need to check individual states within this,
-        // but it happens across lots of states so who's to say what's best
-        if (_isMeleeing)
-        {
-            addedVelocity += HandleMelee();
-        }
 
         // possible player states
         if (_isGrounded)
@@ -109,11 +103,24 @@ public class PlayerMotor : MonoBehaviour
             addedVelocity += HandleAirbornMovement(moveDirection);
         }
 
+        // handle melee behaviour
+        // breaks state machine a bit cause we need to check individual states within this,
+        // but it happens across lots of states so who's to say what's best
+        if (_isMeleeing)
+        {
+            addedVelocity += HandleMelee();
+        }
+
+        Debug.Log("Added y: " + addedVelocity.y);
+
         // gravity
         addedVelocity += new Vector3(0, _gravity * Time.deltaTime, 0);
 
         // add our new velocity
         _playerVelocity += addedVelocity;
+
+        Debug.Log("After y: " + _playerVelocity.y);
+
 
         // right before we move we need to figure out if we'll be moving down a slope
         // if so we should add some negative vert velocity so that we "suck" to the slope
@@ -265,6 +272,11 @@ public class PlayerMotor : MonoBehaviour
                 if (!_isGrounded || (_isGrounded && _isCrouched))
                 {
                     addedVelocity += (-cam.transform.forward.normalized * _punchBoost);
+
+                    if (_isGrounded && _isCrouched)
+                    {
+                        _isSliding = true;
+                    }
                 }
             }
         }
@@ -286,9 +298,9 @@ public class PlayerMotor : MonoBehaviour
         // and also don't want gravity to continually increase our negative y vel if we're grounded
 
         // also want to not go flying off every little bump so reset y vel if we need to
-        if (_playerVelocity.y <= 0.2 || (_playerVelocity.y > 0))
+        if (_playerVelocity.y <= 0.5 || _playerVelocity.y > 0)
         {
-            _playerVelocity.y = -0.5f;
+            _playerVelocity.y = -0.4f;
         }
     }
 
@@ -376,7 +388,7 @@ public class PlayerMotor : MonoBehaviour
         float suckVelocity = 0f;
         float buffer = 1.1f;
 
-        if (_isGrounded && _lastGroundedHit != null && !_isJumping)
+        if (_isGrounded && _lastGroundedHit != null && !_isJumping && !_isMeleeing)
         {
             Vector3 slopeNormal = _lastGroundedHit.normal;
 
@@ -397,7 +409,6 @@ public class PlayerMotor : MonoBehaviour
                 }
             }
         }
-
         return suckVelocity *= buffer;
     }
 
