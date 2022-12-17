@@ -24,6 +24,7 @@ public class PlayerMotor : MonoBehaviour
     public float _groundCollisionThreshold = 0.2f;
     public float _meleeDistance = 2f;
     public float _punchBoost = 8f;
+    public float _punchBoostYLimiter = 0.5f;
 
     public bool _isCrouched;
     public bool _isJumping;
@@ -61,8 +62,6 @@ public class PlayerMotor : MonoBehaviour
     {
         Vector3 addedVelocity = Vector3.zero;
         Vector3 moveDirection = new Vector3(input.x, 0, input.y);
-
-        Debug.Log("Starting y: " + _playerVelocity.y);
 
         // controller.isGrounded is giving poor results
         // utilize a secondary grounded check based on the CapsuleCollider of the CharacterController
@@ -111,15 +110,11 @@ public class PlayerMotor : MonoBehaviour
             addedVelocity += HandleMelee();
         }
 
-        Debug.Log("Added y: " + addedVelocity.y);
-
         // gravity
         addedVelocity += new Vector3(0, _gravity * Time.deltaTime, 0);
 
         // add our new velocity
         _playerVelocity += addedVelocity;
-
-        Debug.Log("After y: " + _playerVelocity.y);
 
 
         // right before we move we need to figure out if we'll be moving down a slope
@@ -272,7 +267,7 @@ public class PlayerMotor : MonoBehaviour
                 if (!_isGrounded || (_isGrounded && _isCrouched))
                 {
                     addedVelocity += (-cam.transform.forward.normalized * _punchBoost);
-
+                    addedVelocity.y *= _punchBoostYLimiter;
                     if (_isGrounded && _isCrouched)
                     {
                         _isSliding = true;
