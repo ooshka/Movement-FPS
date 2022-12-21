@@ -9,6 +9,8 @@ public class PlayerMotor : MonoBehaviour
 
     public float _gravity = -15f;
     public float _jumpHeight = 1.2f;
+    public float _lateJumpDelay = 0.1f;
+    public float _jumpCooldown = 0.5f;
     public float _walkSpeed = 4f;
     public float _sprintSpeed = 8f;
     public float _sprintStrafeSpeed = 4f;
@@ -33,6 +35,7 @@ public class PlayerMotor : MonoBehaviour
     public bool _wasSliding;
     public bool _isSprinting;
     public bool _isGrounded;
+    public bool _wasGrounded;
     public bool _secondaryGroundedCheck;
 
     public Vector3 _playerVelocity;
@@ -41,6 +44,8 @@ public class PlayerMotor : MonoBehaviour
     private Vector3 referenceObjectPosition;
     private ControllerColliderHit _lastGroundedHit;
 
+    private float _lateJumpTimer = 0;
+    private float _jumpCooldownTimer = 0;
 
     // Start is called before the first frame update
     void Start()
@@ -84,7 +89,7 @@ public class PlayerMotor : MonoBehaviour
             // we can jump in either crouched or walk/sprint mode
             if (_isJumping)
             {
-                addedVelocity.y += Mathf.Sqrt(-2 * _gravity * _jumpHeight);
+                addedVelocity += HandleJump();
             }
 
             if (!_isCrouched)
@@ -130,6 +135,12 @@ public class PlayerMotor : MonoBehaviour
         // reset our various flags
         _isJumping = false;
         _isMeleeing = false;
+
+        // store whether we were grounded this frame or not
+        _wasGrounded = _isGrounded;
+
+        // TODO: make a better timer class and just iterate over our timers
+        _jumpCooldownTimer = Mathf.Max(0, _jumpCooldownTimer - Time.deltaTime);
 
     }
 
@@ -249,7 +260,29 @@ public class PlayerMotor : MonoBehaviour
 
         }
 
+        // also need to see if we can still late jump
+        if (_wasGrounded)
+        {
+            // if we were grounded last frame reset our timer
+            _lateJumpTimer = _lateJumpDelay;
+        } else
+        {
+            _lateJumpTimer = Mathf.Max(0, _lateJumpTimer - Time.deltaTime);
+        }
+
+        if (_lateJumpTimer > 0 && _isJumping)
+        {
+            addVelocity += HandleJump();
+        }
+
         return addVelocity;
+    }
+
+    private Vector3 HandleJump()
+    {
+        Vector3 addedVelocity = Vector3.zero;
+        addedVelocity.y = Mathf.Sqrt(-2 * _gravity * _jumpHeight);
+        return addedVelocity;
     }
 
     private Vector3 HandleMelee()
@@ -317,10 +350,12 @@ public class PlayerMotor : MonoBehaviour
 
     public void Jump()
     {
-        if (_isGrounded)
+
+        if (_jumpCooldownTimer == 0)
         {
             // set a flag here so we know we're jumping and can set proper velocity in normal flow
             _isJumping = true;
+            _jumpCooldownTimer = _jumpCooldown;
         }
     }
 
