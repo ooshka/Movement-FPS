@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayerMotor : MonoBehaviour
@@ -25,6 +26,7 @@ public class PlayerMotor : MonoBehaviour
     public float _negativeSlopeSlideFactor = 40f;
     public float _groundCollisionThreshold = 0.2f;
     public float _meleeDistance = 2f;
+    public float _meleeCooldown = 0.5f;
     public float _punchBoost = 8f;
     public float _punchBoostYLimiter = 0.5f;
 
@@ -44,8 +46,10 @@ public class PlayerMotor : MonoBehaviour
     private Vector3 referenceObjectPosition;
     private ControllerColliderHit _lastGroundedHit;
 
-    private float _lateJumpTimer = 0;
-    private float _jumpCooldownTimer = 0;
+    private Dictionary<string, Timer> timers = new Dictionary<string, Timer>();
+    private readonly string LATE_JUMP_TIMER = "late_jump";
+    private readonly string JUMP_COOLDOWN_TIMER = "jump_cooldown";
+    private readonly string MELEE_COOLDOWN_TIMER = "melee_cooldown";
 
     // Start is called before the first frame update
     void Start()
@@ -54,6 +58,11 @@ public class PlayerMotor : MonoBehaviour
         controller.height = _standingHeight;
         _prevPosition = transform.position;
         _slideStartVelocity = 0.95f * _sprintSpeed;
+
+        // init all of our timers
+        timers.Add(LATE_JUMP_TIMER, new Timer(_lateJumpDelay, true));
+        timers.Add(JUMP_COOLDOWN_TIMER, new Timer(_jumpCooldown, false));
+        timers.Add(MELEE_COOLDOWN_TIMER, new Timer(_meleeCooldown, false));
     }
 
     // Update is called once per frame
@@ -139,8 +148,11 @@ public class PlayerMotor : MonoBehaviour
         // store whether we were grounded this frame or not
         _wasGrounded = _isGrounded;
 
-        // TODO: make a better timer class and just iterate over our timers
-        _jumpCooldownTimer = Mathf.Max(0, _jumpCooldownTimer - Time.deltaTime);
+        // iterate all of our timers
+        foreach(Timer timer in timers.Values)
+        {
+            timer.Iterate(Time.deltaTime);
+        }
 
     }
 
@@ -263,14 +275,10 @@ public class PlayerMotor : MonoBehaviour
         // also need to see if we can still late jump
         if (_wasGrounded)
         {
-            // if we were grounded last frame reset our timer
-            _lateJumpTimer = _lateJumpDelay;
-        } else
-        {
-            _lateJumpTimer = Mathf.Max(0, _lateJumpTimer - Time.deltaTime);
+            timers[LATE_JUMP_TIMER].Reset();
         }
 
-        if (_lateJumpTimer > 0 && _isJumping)
+        if (timers[LATE_JUMP_TIMER].CanTriggerEvent() && _isJumping)
         {
             addVelocity += HandleJump();
         }
@@ -351,17 +359,20 @@ public class PlayerMotor : MonoBehaviour
     public void Jump()
     {
 
-        if (_jumpCooldownTimer == 0)
+        if (timers[JUMP_COOLDOWN_TIMER].CanTriggerEventAndReset())
         {
             // set a flag here so we know we're jumping and can set proper velocity in normal flow
             _isJumping = true;
-            _jumpCooldownTimer = _jumpCooldown;
         }
     }
 
     public void Melee()
     {
-        _isMeleeing = true;
+        if (timers[MELEE_COOLDOWN_TIMER].CanTriggerEventAndReset())
+        {
+            _isMeleeing = true;
+
+        }
     }
 
     private void CalcPlayerSliding()
