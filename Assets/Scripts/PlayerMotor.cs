@@ -45,6 +45,7 @@ public class PlayerMotor : MonoBehaviour
     private Vector3 _prevPosition;
     private Vector3 referenceObjectPosition;
     private ControllerColliderHit _lastGroundedHit;
+    private Animator animator;
 
     private Dictionary<string, Timer> timers = new Dictionary<string, Timer>();
     private readonly string LATE_JUMP_TIMER = "late_jump";
@@ -55,6 +56,7 @@ public class PlayerMotor : MonoBehaviour
     void Start()
     {
         controller = GetComponent<CharacterController>();
+        animator = GameObject.Find("Player_Arms").GetComponent<Animator>();
         controller.height = _standingHeight;
         _prevPosition = transform.position;
         _slideStartVelocity = 0.95f * _sprintSpeed;
@@ -295,6 +297,7 @@ public class PlayerMotor : MonoBehaviour
 
     private Vector3 HandleMelee()
     {
+        animator.SetTrigger("Melee_Trigger");
         Vector3 addedVelocity = Vector3.zero;
         RaycastHit hit;
         if (Physics.Raycast(cam.transform.position, cam.transform.forward, out hit, _meleeDistance))
