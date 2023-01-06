@@ -51,6 +51,8 @@ public class PlayerMotor : MonoBehaviour
     private readonly string JUMP_COOLDOWN_TIMER = "jump_cooldown";
     private readonly string MELEE_COOLDOWN_TIMER = "melee_cooldown";
 
+    private List<PlayerAnim.State> playerState = new List<PlayerAnim.State>();
+
     // Start is called before the first frame update
     void Start()
     {
@@ -74,6 +76,9 @@ public class PlayerMotor : MonoBehaviour
     // actually happening inside a FixedUpdate
     public void ProcessMove(Vector2 input)
     {
+
+        List<PlayerAnim.State> currentState = new List<PlayerAnim.State>();
+
         Vector3 addedVelocity = Vector3.zero;
         Vector3 moveDirection = new Vector3(input.x, 0, input.y);
 
@@ -470,5 +475,8 @@ public class PlayerMotor : MonoBehaviour
         }
     }
 
+    public List<PlayerAnim.State> GetState()
+    {
 
+    }
 }
