@@ -22,6 +22,12 @@ public class PlayerAnim : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+        List<State> states = motor.GetState();
+        string stateString = "";
+        foreach (State state in states)
+        {
+            stateString += " " + state.ToString();
+        }
+        Debug.Log(stateString);
     }
 }
