@@ -52,6 +52,11 @@ public class PlayerMotor : MonoBehaviour
     private readonly string JUMP_COOLDOWN_TIMER = "jump_cooldown";
     private readonly string MELEE_COOLDOWN_TIMER = "melee_cooldown";
 
+    // we need a handle on two state lists such that one can always be populated and only updated when needed
+    // if we just had one there would be periods of time where it is cleared and filled up (b/c we're using Update for animation and FixedUpdate for physix)
+    private List<PlayerAnim.State> frameState = new List<PlayerAnim.State>();
+    private List<PlayerAnim.State> playerState = new List<PlayerAnim.State>();
+
     // Start is called before the first frame update
     void Start()
     {
@@ -76,6 +81,9 @@ public class PlayerMotor : MonoBehaviour
     // actually happening inside a FixedUpdate
     public void ProcessMove(Vector2 input)
     {
+        // clear the animation state so we can set it up again this frame
+        frameState.Clear();
+
         Vector3 addedVelocity = Vector3.zero;
         Vector3 moveDirection = new Vector3(input.x, 0, input.y);
 
@@ -100,6 +108,7 @@ public class PlayerMotor : MonoBehaviour
             // we can jump in either crouched or walk/sprint mode
             if (_isJumping)
             {
+                frameState.Add(PlayerAnim.State.JUMPING);
                 addedVelocity += HandleJump();
             }
 
@@ -156,6 +165,8 @@ public class PlayerMotor : MonoBehaviour
             timer.Iterate(Time.deltaTime);
         }
 
+        // update our public animation state
+        updateGlobalState();
     }
 
     private Vector3 HandleGroundedMovement(Vector3 moveDirection)
@@ -165,6 +176,7 @@ public class PlayerMotor : MonoBehaviour
         if (moveDirection.z > 0 && (int)moveDirection.magnitude == 1)
         {
             _isSprinting = true;
+            frameState.Add(PlayerAnim.State.SPRINTING);
         }
         else
         {
@@ -196,6 +208,13 @@ public class PlayerMotor : MonoBehaviour
         }
         else
         {
+            if (moveDirection.magnitude == 0)
+            {
+                frameState.Add(PlayerAnim.State.IDLE);
+            } else
+            {
+                frameState.Add(PlayerAnim.State.WALKING);
+            }
             addVelocity += transform.TransformDirection(moveDirection) * _walkSpeed;
         }
 
@@ -213,6 +232,13 @@ public class PlayerMotor : MonoBehaviour
         if (!_isSliding)
         {
             // crouch walking
+            if (moveDirection.magnitude == 0)
+            {
+                frameState.Add(PlayerAnim.State.CROUCH_IDLE);
+            } else
+            {
+                frameState.Add(PlayerAnim.State.CROUCH_WALKING);
+            }
 
             addVelocity += transform.TransformDirection(moveDirection) * _walkSpeed;
 
@@ -221,6 +247,8 @@ public class PlayerMotor : MonoBehaviour
             _playerVelocity.z = 0;
         } else
         {
+            frameState.Add(PlayerAnim.State.SLIDING);
+                    
             Vector3 velDirection = _playerVelocity / _playerVelocity.magnitude;
 
             // we be boostin
@@ -259,6 +287,8 @@ public class PlayerMotor : MonoBehaviour
 
     private Vector3 HandleAirbornMovement(Vector3 moveDirection)
     {
+        frameState.Add(PlayerAnim.State.AIRBORNE);
+
         Vector3 addVelocity = Vector3.zero;
 
         if (moveDirection.magnitude > 0)
@@ -297,6 +327,8 @@ public class PlayerMotor : MonoBehaviour
 
     private Vector3 HandleMelee()
     {
+        frameState.Add(PlayerAnim.State.MELEE);
+
         animator.SetTrigger("Melee_Trigger");
         Vector3 addedVelocity = Vector3.zero;
         RaycastHit hit;
@@ -473,5 +505,13 @@ public class PlayerMotor : MonoBehaviour
         }
     }
 
+    private void updateGlobalState()
+    {
+        playerState = new List<PlayerAnim.State>(frameState);
+    }
 
+    public List<PlayerAnim.State> GetState()
+    {
+        return new List<PlayerAnim.State>(playerState);
+    }
 }
