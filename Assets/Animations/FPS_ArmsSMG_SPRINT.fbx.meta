@@ -1,11 +1,11 @@
 fileFormatVersion: 2
-guid: 309f216359890c444b7b18a5c8eb889e
+guid: 0c99dc946fb581e49a37ceaba179a86d
 ModelImporter:
   serializedVersion: 21300
   internalIDToNameTable:
   - first:
-      74: -2870084914991471164
-    second: Human FPS|Human FPSAction
+      74: 3346145601714308108
+    second: Human FPS|SMG SPRINT
   externalObjects: {}
   materials:
     materialImportMode: 0
@@ -36,11 +36,11 @@ ModelImporter:
     extraUserProperties: []
     clipAnimations:
     - serializedVersion: 16
-      name: Human FPS|Human FPSAction
-      takeName: Human FPS|Human FPSAction
+      name: Human FPS|SMG SPRINT
+      takeName: Human FPS|SMG SPRINT
       internalID: 0
       firstFrame: 0
-      lastFrame: 23
+      lastFrame: 24
       wrapMode: 0
       orientationOffsetY: 0
       level: 0

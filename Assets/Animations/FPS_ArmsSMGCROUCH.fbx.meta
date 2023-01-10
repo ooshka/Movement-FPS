@@ -1,14 +1,14 @@
 fileFormatVersion: 2
-guid: cb634d7f7b9809a42b1740aa9f420225
+guid: 021fa272104d59f4baecb29f53fbc705
 ModelImporter:
   serializedVersion: 21300
   internalIDToNameTable:
   - first:
-      74: -2870084914991471164
-    second: Human FPS|Human FPSAction
+      74: -8759470040028429973
+    second: Human FPS|SMG CROUCH
   externalObjects: {}
   materials:
-    materialImportMode: 2
+    materialImportMode: 0
     materialName: 0
     materialSearch: 1
     materialLocation: 1
@@ -36,8 +36,8 @@ ModelImporter:
     extraUserProperties: []
     clipAnimations:
     - serializedVersion: 16
-      name: Human FPS|Human FPSAction
-      takeName: Human FPS|Human FPSAction
+      name: Human FPS|SMG CROUCH
+      takeName: Human FPS|SMG CROUCH
       internalID: 0
       firstFrame: 0
       lastFrame: 24
@@ -47,7 +47,7 @@ ModelImporter:
       cycleOffset: 0
       loop: 0
       hasAdditiveReferencePose: 0
-      loopTime: 0
+      loopTime: 1
       loopBlend: 0
       loopBlendOrientation: 0
       loopBlendPositionY: 0
