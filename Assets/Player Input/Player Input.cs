@@ -329,6 +329,45 @@ public partial class @PlayerInput : IInputActionCollection2, IDisposable
                     ""isPartOfComposite"": false
                 }
             ]
+        },
+        {
+            ""name"": ""Shooting"",
+            ""id"": ""72d1e4bd-e37f-4bc1-9d36-fbbf0fc53478"",
+            ""actions"": [
+                {
+                    ""name"": ""Shoot"",
+                    ""type"": ""Button"",
+                    ""id"": ""00d84afc-3e57-4e68-920e-afd90196227e"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                }
+            ],
+            ""bindings"": [
+                {
+                    ""name"": """",
+                    ""id"": ""479c486a-a274-479f-b7b7-d7fba88f2bb1"",
+                    ""path"": ""<Mouse>/leftButton"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Shoot"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""85e348e2-c065-417e-ba7e-1cc09688069e"",
+                    ""path"": ""<Gamepad>/rightTrigger"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Shoot"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                }
+            ]
         }
     ],
     ""controlSchemes"": []
@@ -346,6 +385,9 @@ public partial class @PlayerInput : IInputActionCollection2, IDisposable
         // In Air
         m_InAir = asset.FindActionMap("In Air", throwIfNotFound: true);
         m_InAir_Newaction = m_InAir.FindAction("New action", throwIfNotFound: true);
+        // Shooting
+        m_Shooting = asset.FindActionMap("Shooting", throwIfNotFound: true);
+        m_Shooting_Shoot = m_Shooting.FindAction("Shoot", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -532,6 +574,39 @@ public partial class @PlayerInput : IInputActionCollection2, IDisposable
         }
     }
     public InAirActions @InAir => new InAirActions(this);
+
+    // Shooting
+    private readonly InputActionMap m_Shooting;
+    private IShootingActions m_ShootingActionsCallbackInterface;
+    private readonly InputAction m_Shooting_Shoot;
+    public struct ShootingActions
+    {
+        private @PlayerInput m_Wrapper;
+        public ShootingActions(@PlayerInput wrapper) { m_Wrapper = wrapper; }
+        public InputAction @Shoot => m_Wrapper.m_Shooting_Shoot;
+        public InputActionMap Get() { return m_Wrapper.m_Shooting; }
+        public void Enable() { Get().Enable(); }
+        public void Disable() { Get().Disable(); }
+        public bool enabled => Get().enabled;
+        public static implicit operator InputActionMap(ShootingActions set) { return set.Get(); }
+        public void SetCallbacks(IShootingActions instance)
+        {
+            if (m_Wrapper.m_ShootingActionsCallbackInterface != null)
+            {
+                @Shoot.started -= m_Wrapper.m_ShootingActionsCallbackInterface.OnShoot;
+                @Shoot.performed -= m_Wrapper.m_ShootingActionsCallbackInterface.OnShoot;
+                @Shoot.canceled -= m_Wrapper.m_ShootingActionsCallbackInterface.OnShoot;
+            }
+            m_Wrapper.m_ShootingActionsCallbackInterface = instance;
+            if (instance != null)
+            {
+                @Shoot.started += instance.OnShoot;
+                @Shoot.performed += instance.OnShoot;
+                @Shoot.canceled += instance.OnShoot;
+            }
+        }
+    }
+    public ShootingActions @Shooting => new ShootingActions(this);
     public interface IGroundedActions
     {
         void OnMovement(InputAction.CallbackContext context);
@@ -547,5 +622,9 @@ public partial class @PlayerInput : IInputActionCollection2, IDisposable
     public interface IInAirActions
     {
         void OnNewaction(InputAction.CallbackContext context);
+    }
+    public interface IShootingActions
+    {
+        void OnShoot(InputAction.CallbackContext context);
     }
 }
