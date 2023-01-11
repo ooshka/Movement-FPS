@@ -8,7 +8,8 @@ public class InputManager : MonoBehaviour
     private PlayerInput.ShootingActions shootingActions;
     private PlayerLook look;
     private PlayerMotor motor;
-    public static Action shoot;
+    public static Action shootAction, reloadAction;
+
     // Start is called before the first frame update
     void Awake()
     {
@@ -27,7 +28,9 @@ public class InputManager : MonoBehaviour
         groundedActions.Crouch.canceled += ctx => motor._isCrouched = false;
 
         // shooting
-        shootingActions.Shoot.performed += ctx => shoot?.Invoke();
+        shootingActions.Shoot.performed += ctx => shootAction?.Invoke();
+        shootingActions.Reload.performed += ctx => reloadAction?.Invoke();
+
     }
 
     void FixedUpdate()
@@ -46,10 +49,12 @@ public class InputManager : MonoBehaviour
     private void OnEnable()
     {
         groundedActions.Enable();
+        shootingActions.Enable();
     }
 
     private void OnDisable()
     {
         groundedActions.Disable();
+        shootingActions.Disable();
     }
 }

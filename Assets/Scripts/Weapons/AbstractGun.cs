@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 public abstract class AbstractGun : MonoBehaviour
@@ -15,20 +16,38 @@ public abstract class AbstractGun : MonoBehaviour
     void Start()
     {
         // initialize Action listeners
-        InputManager.shoot += Shoot;
+        InputManager.shootAction += Shoot;
+        InputManager.reloadAction += Reload;
 
         currentAmmo = data.clipSize;
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
-
     private void Shoot()
     {
-        Debug.Log("Shoosting");
-        currentAmmo--;
+        if (!reloading && currentAmmo > 0)
+        {
+            Debug.Log("Shoosting");
+            currentAmmo--;
+        }
+    }
+
+    private void Reload()
+    {
+        if (!reloading)
+        {
+            StartCoroutine(DoReload());
+        }
+    }
+
+    private IEnumerator DoReload()
+    {
+        reloading = true;
+        Debug.Log("Reloading");
+
+        yield return new WaitForSeconds(data.reloadTime);
+
+        currentAmmo = data.clipSize;
+        reloading = false;
+        Debug.Log("Finished Reloading");
     }
 }
