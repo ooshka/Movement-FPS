@@ -17,6 +17,6 @@ MonoBehaviour:
   semiAuto: 0
   damage: 20
   bulletsPerShot: 1
-  bulletSpeed: 200
+  bulletSpeed: 80
   clipSize: 20
   reloadTime: 2
