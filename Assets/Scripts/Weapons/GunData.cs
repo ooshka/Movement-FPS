@@ -14,6 +14,7 @@ public class GunData : ScriptableObject
     public float damage;
     public float bulletsPerShot;
     public float bulletSpeed;
+    public float maxDistance;
 
     [Header("Reload")]
     public int clipSize;

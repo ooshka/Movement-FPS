@@ -13,10 +13,11 @@ MonoBehaviour:
   m_Name: SMG
   m_EditorClassIdentifier: 
   name: SMG
-  fireRate: 5
+  fireRate: 30
   semiAuto: 0
   damage: 20
   bulletsPerShot: 1
   bulletSpeed: 80
+  maxDistance: 200
   clipSize: 20
   reloadTime: 2
