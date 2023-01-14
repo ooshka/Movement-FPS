@@ -128,3 +128,4 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   impactObject: {fileID: 4496532117210310518, guid: 8818b2bc9cc66c049a210965fb23ea59, type: 3}
+  data: {fileID: 11400000, guid: 295e4682ed2d4904f9a5c9058a402b18, type: 2}

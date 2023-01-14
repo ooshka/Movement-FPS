@@ -4,13 +4,13 @@ using UnityEngine;
 
 public abstract class AbstractBullet : MonoBehaviour
 {
-    private float damage;
-
     public GameObject impactObject;
+    public GunData data;
 
-    public void SetDamage(float damage)
+    private void Start()
     {
-        this.damage = damage;
+        float ttl = data.maxDistance / data.bulletSpeed;
+        Destroy(gameObject, ttl);
     }
 
     private void OnCollisionEnter(Collision collision)
