@@ -62,6 +62,15 @@ public partial class @PlayerInput : IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Melee"",
+                    ""type"": ""Button"",
+                    ""id"": ""5847346b-93b8-4c45-9a38-38fa5a00ad0a"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -240,6 +249,28 @@ public partial class @PlayerInput : IInputActionCollection2, IDisposable
                     ""action"": ""Crouch"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""08bb76ec-ce30-42a4-a1ed-ce2da7fe7463"",
+                    ""path"": ""<Keyboard>/c"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Melee"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""24904554-f151-439d-9aa0-11b7cb0ad7d7"",
+                    ""path"": ""<Gamepad>/leftStickPress"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Melee"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         },
@@ -308,6 +339,7 @@ public partial class @PlayerInput : IInputActionCollection2, IDisposable
         m_Grounded_Jump = m_Grounded.FindAction("Jump", throwIfNotFound: true);
         m_Grounded_Look = m_Grounded.FindAction("Look", throwIfNotFound: true);
         m_Grounded_Crouch = m_Grounded.FindAction("Crouch", throwIfNotFound: true);
+        m_Grounded_Melee = m_Grounded.FindAction("Melee", throwIfNotFound: true);
         // Wall Running
         m_WallRunning = asset.FindActionMap("Wall Running", throwIfNotFound: true);
         m_WallRunning_Newaction = m_WallRunning.FindAction("New action", throwIfNotFound: true);
@@ -377,6 +409,7 @@ public partial class @PlayerInput : IInputActionCollection2, IDisposable
     private readonly InputAction m_Grounded_Jump;
     private readonly InputAction m_Grounded_Look;
     private readonly InputAction m_Grounded_Crouch;
+    private readonly InputAction m_Grounded_Melee;
     public struct GroundedActions
     {
         private @PlayerInput m_Wrapper;
@@ -385,6 +418,7 @@ public partial class @PlayerInput : IInputActionCollection2, IDisposable
         public InputAction @Jump => m_Wrapper.m_Grounded_Jump;
         public InputAction @Look => m_Wrapper.m_Grounded_Look;
         public InputAction @Crouch => m_Wrapper.m_Grounded_Crouch;
+        public InputAction @Melee => m_Wrapper.m_Grounded_Melee;
         public InputActionMap Get() { return m_Wrapper.m_Grounded; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -406,6 +440,9 @@ public partial class @PlayerInput : IInputActionCollection2, IDisposable
                 @Crouch.started -= m_Wrapper.m_GroundedActionsCallbackInterface.OnCrouch;
                 @Crouch.performed -= m_Wrapper.m_GroundedActionsCallbackInterface.OnCrouch;
                 @Crouch.canceled -= m_Wrapper.m_GroundedActionsCallbackInterface.OnCrouch;
+                @Melee.started -= m_Wrapper.m_GroundedActionsCallbackInterface.OnMelee;
+                @Melee.performed -= m_Wrapper.m_GroundedActionsCallbackInterface.OnMelee;
+                @Melee.canceled -= m_Wrapper.m_GroundedActionsCallbackInterface.OnMelee;
             }
             m_Wrapper.m_GroundedActionsCallbackInterface = instance;
             if (instance != null)
@@ -422,6 +459,9 @@ public partial class @PlayerInput : IInputActionCollection2, IDisposable
                 @Crouch.started += instance.OnCrouch;
                 @Crouch.performed += instance.OnCrouch;
                 @Crouch.canceled += instance.OnCrouch;
+                @Melee.started += instance.OnMelee;
+                @Melee.performed += instance.OnMelee;
+                @Melee.canceled += instance.OnMelee;
             }
         }
     }
@@ -498,6 +538,7 @@ public partial class @PlayerInput : IInputActionCollection2, IDisposable
         void OnJump(InputAction.CallbackContext context);
         void OnLook(InputAction.CallbackContext context);
         void OnCrouch(InputAction.CallbackContext context);
+        void OnMelee(InputAction.CallbackContext context);
     }
     public interface IWallRunningActions
     {

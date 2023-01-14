@@ -1,35 +1,43 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayerMotor : MonoBehaviour
 {
     public Camera cam;
     private CharacterController controller;
-
-    private float _standingHeight = 2.0f;
-    private float _crouchedHeight = 1.0f;
+    private float _standingHeight = 2f;
+    private float _crouchedHeight = 1f;
 
     public float _gravity = -15f;
-    public float _jumpHeight = 3f;
-    public float _walkSpeed = 7f;
-    public float _sprintSpeed = 15f;
-    public float _sprintStrafeSpeed = 7f;
+    public float _jumpHeight = 1.2f;
+    public float _lateJumpDelay = 0.1f;
+    public float _jumpCooldown = 0.5f;
+    public float _walkSpeed = 4f;
+    public float _sprintSpeed = 8f;
+    public float _sprintStrafeSpeed = 4f;
     public float _sprintAccelTime = 0.75f;
-    public float _airStrafeAccel = 30f;
-    public float _airStrafeMaxVelocity = 7f;
+    public float _airStrafeAccel = 10f;
+    public float _airStrafeMaxVelocity = 8f;
     public float _slideCutoffVelocity = 0.2f;
     public float _slideStartVelocity;
     public float _slideFrictionDecel = 12f;
-    public float _slideBoost = 7.0f;
+    public float _slideBoost = 4.0f;
     public float _positiveSlopeSlideFactor = 20f;
     public float _negativeSlopeSlideFactor = 40f;
     public float _groundCollisionThreshold = 0.2f;
+    public float _meleeDistance = 2f;
+    public float _meleeCooldown = 0.5f;
+    public float _punchBoost = 8f;
+    public float _punchBoostYLimiter = 0.5f;
 
     public bool _isCrouched;
     public bool _isJumping;
+    public bool _isMeleeing;
     public bool _isSliding = false;
     public bool _wasSliding;
     public bool _isSprinting;
     public bool _isGrounded;
+    public bool _wasGrounded;
     public bool _secondaryGroundedCheck;
 
     public Vector3 _playerVelocity;
@@ -38,6 +46,15 @@ public class PlayerMotor : MonoBehaviour
     private Vector3 referenceObjectPosition;
     private ControllerColliderHit _lastGroundedHit;
 
+    private Dictionary<string, Timer> timers = new Dictionary<string, Timer>();
+    private readonly string LATE_JUMP_TIMER = "late_jump";
+    private readonly string JUMP_COOLDOWN_TIMER = "jump_cooldown";
+    private readonly string MELEE_COOLDOWN_TIMER = "melee_cooldown";
+
+    // we need a handle on two state lists such that one can always be populated and only updated when needed
+    // if we just had one there would be periods of time where it is cleared and filled up (b/c we're using Update for animation and FixedUpdate for physix)
+    private List<PlayerAnim.State> frameState = new List<PlayerAnim.State>();
+    private List<PlayerAnim.State> playerState = new List<PlayerAnim.State>();
 
     // Start is called before the first frame update
     void Start()
@@ -46,6 +63,11 @@ public class PlayerMotor : MonoBehaviour
         controller.height = _standingHeight;
         _prevPosition = transform.position;
         _slideStartVelocity = 0.95f * _sprintSpeed;
+
+        // init all of our timers
+        timers.Add(LATE_JUMP_TIMER, new Timer(_lateJumpDelay, true));
+        timers.Add(JUMP_COOLDOWN_TIMER, new Timer(_jumpCooldown, false));
+        timers.Add(MELEE_COOLDOWN_TIMER, new Timer(_meleeCooldown, false));
     }
 
     // Update is called once per frame
@@ -57,6 +79,9 @@ public class PlayerMotor : MonoBehaviour
     // actually happening inside a FixedUpdate
     public void ProcessMove(Vector2 input)
     {
+        // clear the animation state so we can set it up again this frame
+        frameState.Clear();
+
         Vector3 addedVelocity = Vector3.zero;
         Vector3 moveDirection = new Vector3(input.x, 0, input.y);
 
@@ -71,7 +96,7 @@ public class PlayerMotor : MonoBehaviour
 
         // need to set our sliding flags regardless of state
         CalcPlayerSliding();
-        
+
         // possible player states
         if (_isGrounded)
         {
@@ -81,7 +106,8 @@ public class PlayerMotor : MonoBehaviour
             // we can jump in either crouched or walk/sprint mode
             if (_isJumping)
             {
-                addedVelocity.y += Mathf.Sqrt(-2 * _gravity * _jumpHeight);
+                frameState.Add(PlayerAnim.State.JUMPING);
+                addedVelocity += HandleJump();
             }
 
             if (!_isCrouched)
@@ -99,11 +125,20 @@ public class PlayerMotor : MonoBehaviour
             addedVelocity += HandleAirbornMovement(moveDirection);
         }
 
+        // handle melee behaviour
+        // breaks state machine a bit cause we need to check individual states within this,
+        // but it happens across lots of states so who's to say what's best
+        if (_isMeleeing)
+        {
+            addedVelocity += HandleMelee();
+        }
+
         // gravity
         addedVelocity += new Vector3(0, _gravity * Time.deltaTime, 0);
 
         // add our new velocity
         _playerVelocity += addedVelocity;
+
 
         // right before we move we need to figure out if we'll be moving down a slope
         // if so we should add some negative vert velocity so that we "suck" to the slope
@@ -115,9 +150,21 @@ public class PlayerMotor : MonoBehaviour
         // update global velocity
         UpdatePlayerVelocity();
 
-        // reset our jump flag
+        // reset our various flags
         _isJumping = false;
+        _isMeleeing = false;
 
+        // store whether we were grounded this frame or not
+        _wasGrounded = _isGrounded;
+
+        // iterate all of our timers
+        foreach(Timer timer in timers.Values)
+        {
+            timer.Iterate(Time.deltaTime);
+        }
+
+        // update our public animation state
+        updateGlobalState();
     }
 
     private Vector3 HandleGroundedMovement(Vector3 moveDirection)
@@ -127,6 +174,7 @@ public class PlayerMotor : MonoBehaviour
         if (moveDirection.z > 0 && (int)moveDirection.magnitude == 1)
         {
             _isSprinting = true;
+            frameState.Add(PlayerAnim.State.SPRINTING);
         }
         else
         {
@@ -158,6 +206,13 @@ public class PlayerMotor : MonoBehaviour
         }
         else
         {
+            if (moveDirection.magnitude == 0)
+            {
+                frameState.Add(PlayerAnim.State.IDLE);
+            } else
+            {
+                frameState.Add(PlayerAnim.State.WALKING);
+            }
             addVelocity += transform.TransformDirection(moveDirection) * _walkSpeed;
         }
 
@@ -175,6 +230,13 @@ public class PlayerMotor : MonoBehaviour
         if (!_isSliding)
         {
             // crouch walking
+            if (moveDirection.magnitude == 0)
+            {
+                frameState.Add(PlayerAnim.State.CROUCH_IDLE);
+            } else
+            {
+                frameState.Add(PlayerAnim.State.CROUCH_WALKING);
+            }
 
             addVelocity += transform.TransformDirection(moveDirection) * _walkSpeed;
 
@@ -183,6 +245,8 @@ public class PlayerMotor : MonoBehaviour
             _playerVelocity.z = 0;
         } else
         {
+            frameState.Add(PlayerAnim.State.SLIDING);
+                    
             Vector3 velDirection = _playerVelocity / _playerVelocity.magnitude;
 
             // we be boostin
@@ -221,6 +285,8 @@ public class PlayerMotor : MonoBehaviour
 
     private Vector3 HandleAirbornMovement(Vector3 moveDirection)
     {
+        frameState.Add(PlayerAnim.State.AIRBORNE);
+
         Vector3 addVelocity = Vector3.zero;
 
         if (moveDirection.magnitude > 0)
@@ -236,7 +302,53 @@ public class PlayerMotor : MonoBehaviour
 
         }
 
+        // also need to see if we can still late jump
+        if (_wasGrounded)
+        {
+            timers[LATE_JUMP_TIMER].Reset();
+        }
+
+        if (timers[LATE_JUMP_TIMER].CanTriggerEvent() && _isJumping)
+        {
+            addVelocity += HandleJump();
+        }
+
         return addVelocity;
+    }
+
+    private Vector3 HandleJump()
+    {
+        Vector3 addedVelocity = Vector3.zero;
+        addedVelocity.y = Mathf.Sqrt(-2 * _gravity * _jumpHeight);
+        return addedVelocity;
+    }
+
+    private Vector3 HandleMelee()
+    {
+        frameState.Add(PlayerAnim.State.MELEE);
+
+        Vector3 addedVelocity = Vector3.zero;
+        RaycastHit hit;
+        if (Physics.Raycast(cam.transform.position, cam.transform.forward, out hit, _meleeDistance))
+        {
+            if (hit.collider != null)
+            {
+                // TODO: deal with regular damaging tings
+                // maybe we even have seperate punch boost/melee attack buttons
+
+                // only want to punch boost if we are crouched or airborne
+                if (!_isGrounded || (_isGrounded && _isCrouched))
+                {
+                    addedVelocity += (-cam.transform.forward.normalized * _punchBoost);
+                    addedVelocity.y *= _punchBoostYLimiter;
+                    if (_isGrounded && _isCrouched)
+                    {
+                        _isSliding = true;
+                    }
+                }
+            }
+        }
+        return addedVelocity;
     }
 
     // ---------------------------Util Methods--------------------------------------------------------------
@@ -254,9 +366,9 @@ public class PlayerMotor : MonoBehaviour
         // and also don't want gravity to continually increase our negative y vel if we're grounded
 
         // also want to not go flying off every little bump so reset y vel if we need to
-        if (_playerVelocity.y <= 0.2 || (_playerVelocity.y > 0))
+        if (_playerVelocity.y <= 0.5 || _playerVelocity.y > 0)
         {
-            _playerVelocity.y = -0.5f;
+            _playerVelocity.y = -0.4f;
         }
     }
 
@@ -278,10 +390,20 @@ public class PlayerMotor : MonoBehaviour
 
     public void Jump()
     {
-        if (_isGrounded)
+
+        if (timers[JUMP_COOLDOWN_TIMER].CanTriggerEventAndReset())
         {
             // set a flag here so we know we're jumping and can set proper velocity in normal flow
             _isJumping = true;
+        }
+    }
+
+    public void Melee()
+    {
+        if (timers[MELEE_COOLDOWN_TIMER].CanTriggerEventAndReset())
+        {
+            _isMeleeing = true;
+
         }
     }
 
@@ -339,7 +461,7 @@ public class PlayerMotor : MonoBehaviour
         float suckVelocity = 0f;
         float buffer = 1.1f;
 
-        if (_isGrounded && _lastGroundedHit != null && !_isJumping)
+        if (_isGrounded && _lastGroundedHit != null && !_isJumping && !_isMeleeing)
         {
             Vector3 slopeNormal = _lastGroundedHit.normal;
 
@@ -360,7 +482,6 @@ public class PlayerMotor : MonoBehaviour
                 }
             }
         }
-
         return suckVelocity *= buffer;
     }
 
@@ -381,5 +502,23 @@ public class PlayerMotor : MonoBehaviour
         }
     }
 
+    private void updateGlobalState()
+    {
+        playerState = new List<PlayerAnim.State>(frameState);
+    }
 
+    public List<PlayerAnim.State> GetState()
+    {
+        List<PlayerAnim.State> stateCopy = new List<PlayerAnim.State>(playerState);
+
+        if (playerState.Contains(PlayerAnim.State.MELEE))
+        {
+            playerState.Remove(PlayerAnim.State.MELEE);
+        }
+        if (playerState.Contains(PlayerAnim.State.JUMPING))
+        {
+            playerState.Remove(PlayerAnim.State.JUMPING);
+        }
+        return stateCopy;
+    }
 }

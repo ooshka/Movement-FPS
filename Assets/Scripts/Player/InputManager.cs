@@ -18,6 +18,7 @@ public class InputManager : MonoBehaviour
         motor = GetComponent<PlayerMotor>();
         look = GetComponent<PlayerLook>();
         groundedActions.Jump.performed += ctx => motor.Jump();
+        groundedActions.Melee.performed += ctx => motor.Melee();
         groundedActions.Crouch.started += ctx => motor._isCrouched = true;
         groundedActions.Crouch.canceled += ctx => motor._isCrouched = false;
     }
