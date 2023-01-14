@@ -48,6 +48,7 @@ public abstract class AbstractGun : MonoBehaviour
     {
         if (!reloading && currentAmmo > 0 && isWithinFireRate)
         {
+            // TODO: we may want to recycle bullets rather than instantiate
             AbstractBullet bullet = Instantiate(this.bullet, muzzle.position, Quaternion.identity);
             bullet.transform.forward = CalcShotDirection();
 

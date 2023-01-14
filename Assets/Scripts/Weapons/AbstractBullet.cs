@@ -9,6 +9,9 @@ public abstract class AbstractBullet : MonoBehaviour
 
     private void Start()
     {
+        // ignore collisions with player
+        Physics.IgnoreCollision(GetComponent<Collider>(), data.playerCollider);
+
         float ttl = data.maxDistance / data.bulletSpeed;
         Destroy(gameObject, ttl);
     }
