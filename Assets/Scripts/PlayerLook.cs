@@ -15,8 +15,7 @@ public class PlayerLook : MonoBehaviour
         float mouseY = input.y;
 
         VerticalLook(mouseY * Time.deltaTime * sensitivity);
-
-        transform.Rotate(Vector3.up * (mouseX * Time.deltaTime) * sensitivity);
+        HorizontalLook(mouseX * Time.deltaTime * sensitivity);
     }
 
     public void VerticalLook(float angle)
@@ -24,5 +23,10 @@ public class PlayerLook : MonoBehaviour
         xRotation -= angle;
         xRotation = Mathf.Clamp(xRotation, -90f, 90f);
         cam.transform.localRotation = Quaternion.Euler(xRotation, 0, 0);
+    }
+
+    public void HorizontalLook(float angle)
+    {
+        transform.Rotate(Vector3.up * angle);
     }
 }
