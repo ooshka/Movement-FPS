@@ -4,6 +4,7 @@ using UnityEngine;
 public abstract class AbstractGun : MonoBehaviour
 {
     private Camera cam;
+    private PlayerLook playerLook;
     public Transform muzzle;
     public GunData data;
     public AbstractBullet bullet;
@@ -14,11 +15,19 @@ public abstract class AbstractGun : MonoBehaviour
     private bool reloading = false;
     private bool isWithinFireRate = true;
     private bool isShooting;
+    private bool shouldResetRecoil;
+
+    private readonly Timer recoilTimer = new Timer(0, true);
+    private Timer settlingPositionTimer;
+    private float settlingAngle;
+    private float lastVerticalAngle;
 
     // Start is called before the first frame update
     private void Start()
     {
         cam = GameObject.Find("Main_Camera").GetComponent<Camera>();
+        GameObject player = GameObject.Find("Player");
+        playerLook = player.GetComponent<PlayerLook>();
 
         // initialize Action listeners
         if (data.semiAuto)
@@ -33,6 +42,7 @@ public abstract class AbstractGun : MonoBehaviour
         InputManager.reloadAction += Reload;
 
         currentAmmo = data.clipSize;
+        settlingPositionTimer = new Timer(data.settlingPositionCooldown, false);
     }
 
     private void Update()
@@ -42,6 +52,14 @@ public abstract class AbstractGun : MonoBehaviour
         {
             Shoot();
         }
+
+        HandleRecoil();
+
+        recoilTimer.Iterate(Time.deltaTime);
+        settlingPositionTimer.Iterate(Time.deltaTime);
+        // we store this to check if we aim upwards in PlayerLook
+        // if we do then reset our settling position so we don't get outrageously large crosshair recoveries
+        lastVerticalAngle = cam.transform.forward.y;
     }
 
     private void Shoot()
@@ -60,6 +78,21 @@ public abstract class AbstractGun : MonoBehaviour
             }
 
             currentAmmo--;
+
+            // add some time to our recoil timer so we can kick a bit
+            recoilTimer.AddTime(1 / data.fireRate);
+            // we should recover from this recoil
+            shouldResetRecoil = true;
+
+            if (settlingPositionTimer.CanTriggerEvent() || cam.transform.forward.y > lastVerticalAngle)
+            {
+                // if there has been enough time between shots reset our crosshair recovery angle
+                // OR if we're aiming higher than last frame (i.e. player has aimed upwards)
+                settlingAngle = cam.transform.forward.y;
+            }
+
+            // reset our cooldown position timer
+            settlingPositionTimer.Reset();
 
             StartCoroutine(HandleFireRate());
         }
@@ -112,6 +145,27 @@ public abstract class AbstractGun : MonoBehaviour
 
         Vector3 bulletDirection = (targetPoint - muzzle.position).normalized;
         return bulletDirection;
+    }
+
+    private void HandleRecoil()
+    {
+        if (recoilTimer.CanTriggerEvent())
+        {
+            // we have time left so we are still recoiling
+            playerLook.VerticalLook(data.verticalRecoilVelocity * Time.deltaTime);
+        } else
+        {
+            // no recoil time so reset out crosshair position if needed
+            if (shouldResetRecoil && cam.transform.forward.y > settlingAngle)
+            {
+                // if we're aiming above our reset position and we need to reset
+                playerLook.VerticalLook(-data.settlingVelocity * Time.deltaTime);
+            } else
+            {
+                // if we've already recovered to our settling position set flag
+                shouldResetRecoil = false;
+            }
+        }
     }
 
     private void SetShooting()

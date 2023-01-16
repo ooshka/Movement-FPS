@@ -28,6 +28,11 @@ public class Timer
         timer = duration;
     }
 
+    public void AddTime(float time)
+    {
+        timer += time;
+    }
+
     public bool CanTriggerEvent()
     {
         if (eventDuringTimer)

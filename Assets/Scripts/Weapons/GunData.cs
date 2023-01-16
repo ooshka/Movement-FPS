@@ -11,6 +11,12 @@ public class GunData : ScriptableObject
     public float fireRate;
     public bool semiAuto;
 
+    [Header("Recoil")]
+    public float verticalRecoilVelocity;
+    public float verticalRecoilTime;
+    public float settlingVelocity;
+    [Tooltip("this is the interval of time between shots needed to reset our crosshair's 'recovery' position")]
+    public float settlingPositionCooldown;
 
     [Header("Projectiles")]
     public float damage;
