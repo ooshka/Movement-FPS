@@ -29,6 +29,7 @@ public abstract class AbstractGun : MonoBehaviour
         cam = GameObject.Find("Main_Camera").GetComponent<Camera>();
         GameObject player = GameObject.Find("Player");
         playerLook = player.GetComponent<PlayerLook>();
+        data.playerCollider = player.GetComponent<Collider>();
 
         // initialize Action listeners
         if (data.semiAuto)

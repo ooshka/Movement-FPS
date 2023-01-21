@@ -13,8 +13,14 @@ MonoBehaviour:
   m_Name: SMG
   m_EditorClassIdentifier: 
   name: SMG
+  playerCollider: {fileID: 0}
   fireRate: 30
   semiAuto: 0
+  verticalRecoilVelocity: 15
+  verticalRecoilTime: 0
+  horizontalRecoilVelocity: 5
+  settlingVelocity: 20
+  settlingPositionCooldown: 0.2
   damage: 20
   bulletsPerShot: 1
   bulletSpeed: 80
