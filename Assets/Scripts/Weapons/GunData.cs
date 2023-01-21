@@ -13,7 +13,7 @@ public class GunData : ScriptableObject
 
     [Header("Recoil")]
     public float verticalRecoilVelocity;
-    // not currently being used, but may have to for semi-auto guns
+    [Tooltip("Not currently being used, but may have to be for semi auto guns")]
     public float verticalRecoilTime;
     public float horizontalRecoilVelocity;
     public float settlingVelocity;
