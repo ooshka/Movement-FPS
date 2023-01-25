@@ -31,6 +31,11 @@ public class WallMechanics : MonoBehaviour
         }
     }
 
+    private void Update()
+    {
+        Debug.Log(CanWallJump());
+    }
+
     public bool CanWallJump()
     {
         return AreCollidersInContact(1, 3);

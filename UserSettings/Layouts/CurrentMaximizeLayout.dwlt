@@ -25,7 +25,7 @@ MonoBehaviour:
   m_MinSize: {x: 300, y: 200}
   m_MaxSize: {x: 24288, y: 16192}
   vertical: 0
-  controlID: 16
+  controlID: 8161
 --- !u!114 &2
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -137,8 +137,8 @@ MonoBehaviour:
     y: 0
     width: 200
     height: 947
-  m_MinSize: {x: 200, y: 200}
-  m_MaxSize: {x: 4000, y: 4000}
+  m_MinSize: {x: 201, y: 221}
+  m_MaxSize: {x: 4001, y: 4021}
   m_ActualView: {fileID: 4}
   m_Panes:
   - {fileID: 4}
@@ -175,9 +175,9 @@ MonoBehaviour:
   m_SceneHierarchy:
     m_TreeViewState:
       scrollPos: {x: 0, y: 0}
-      m_SelectedIDs: 64f2ffff
-      m_LastClickedID: -3484
-      m_ExpandedIDs: 32fbffff325d0000
+      m_SelectedIDs: e65d0000
+      m_LastClickedID: 0
+      m_ExpandedIDs: 34faffff32fbffff2e5d0000
       m_RenameOverlay:
         m_UserAcceptedRename: 0
         m_Name: 
@@ -225,7 +225,7 @@ MonoBehaviour:
   m_MinSize: {x: 100, y: 200}
   m_MaxSize: {x: 8096, y: 16192}
   vertical: 1
-  controlID: 17
+  controlID: 8162
 --- !u!114 &6
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -478,9 +478,9 @@ MonoBehaviour:
   m_PlayAudio: 0
   m_AudioPlay: 0
   m_Position:
-    m_Target: {x: -0.26881957, y: 13.999835, z: -1.1289078}
+    m_Target: {x: 15.156788, y: 11.6702385, z: 4.433383}
     speed: 2
-    m_Value: {x: -0.26881957, y: 13.999835, z: -1.1289078}
+    m_Value: {x: 15.156788, y: 11.6702385, z: 4.433383}
   m_RenderMode: 0
   m_CameraMode:
     drawMode: 0
@@ -527,13 +527,13 @@ MonoBehaviour:
     m_GridAxis: 1
     m_gridOpacity: 0.5
   m_Rotation:
-    m_Target: {x: -0.14471972, y: -0.49390405, z: 0.08376435, w: -0.8533053}
+    m_Target: {x: -0.028792996, y: 0.9434753, z: -0.08514287, w: -0.31906012}
     speed: 2
-    m_Value: {x: -0.14471744, y: -0.49389628, z: 0.08376303, w: -0.85329187}
+    m_Value: {x: -0.028792659, y: 0.9434643, z: -0.085141875, w: -0.3190564}
   m_Size:
-    m_Target: 4.5733867
+    m_Target: 0.9457214
     speed: 2
-    m_Value: 4.5733867
+    m_Value: 0.9457214
   m_Ortho:
     m_Target: 0
     speed: 2
@@ -626,23 +626,23 @@ MonoBehaviour:
     m_SkipHidden: 0
     m_SearchArea: 1
     m_Folders:
-    - Assets/Scripts/Player
+    - Assets/Prefabs/Player
     m_Globs: []
     m_OriginalText: 
   m_ViewMode: 1
   m_StartGridSize: 16
   m_LastFolders:
-  - Assets/Scripts/Player
+  - Assets/Prefabs/Player
   m_LastFoldersGridSize: 16
   m_LastProjectPath: C:\Users\wadey\OneDrive\Documents\Unity Projects\Schmovement
     Test
   m_LockTracker:
     m_IsLocked: 0
   m_FolderTreeState:
-    scrollPos: {x: 0, y: 144}
-    m_SelectedIDs: 785f0000
-    m_LastClickedID: 24440
-    m_ExpandedIDs: 000000003e5f0000405f0000425f0000445f0000465f000000ca9a3bffffff7f
+    scrollPos: {x: 0, y: 24}
+    m_SelectedIDs: 685f0000
+    m_LastClickedID: 24424
+    m_ExpandedIDs: 000000003a5f00003c5f00003e5f0000405f0000425f000000ca9a3bffffff7f
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -670,7 +670,7 @@ MonoBehaviour:
     scrollPos: {x: 0, y: 0}
     m_SelectedIDs: 
     m_LastClickedID: 0
-    m_ExpandedIDs: 000000003e5f0000405f0000425f0000445f0000465f0000
+    m_ExpandedIDs: 000000003a5f00003c5f00003e5f0000405f0000425f000000ca9a3bffffff7f
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -695,24 +695,24 @@ MonoBehaviour:
       m_Icon: {fileID: 0}
       m_ResourceFile: 
   m_ListAreaState:
-    m_SelectedInstanceIDs: 64f2ffff
-    m_LastClickedInstanceID: -3484
-    m_HadKeyboardFocusLastEvent: 1
+    m_SelectedInstanceIDs: e65d0000
+    m_LastClickedInstanceID: 24038
+    m_HadKeyboardFocusLastEvent: 0
     m_ExpandedInstanceIDs: c6230000
     m_RenameOverlay:
       m_UserAcceptedRename: 0
-      m_Name: WallColliderPrefab
-      m_OriginalName: WallColliderPrefab
+      m_Name: 
+      m_OriginalName: 
       m_EditFieldRect:
         serializedVersion: 2
         x: 0
         y: 0
         width: 0
         height: 0
-      m_UserData: 24042
+      m_UserData: 0
       m_IsWaitingForDelay: 0
       m_IsRenaming: 0
-      m_OriginalEventType: 0
+      m_OriginalEventType: 11
       m_IsRenamingFilename: 1
       m_ClientGUIView: {fileID: 8}
     m_CreateAssetUtility:
@@ -773,8 +773,8 @@ MonoBehaviour:
     y: 0
     width: 442
     height: 947
-  m_MinSize: {x: 275, y: 50}
-  m_MaxSize: {x: 4000, y: 4000}
+  m_MinSize: {x: 276, y: 71}
+  m_MaxSize: {x: 4001, y: 4021}
   m_ActualView: {fileID: 12}
   m_Panes:
   - {fileID: 12}
