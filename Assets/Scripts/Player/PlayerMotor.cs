@@ -13,7 +13,7 @@ public class PlayerMotor : MonoBehaviour
 
     public float _jumpHeight = 1.2f;
     public float _lateJumpDelay = 0.1f;
-    public float _jumpCooldown = 0.1f;
+    public float _jumpCooldown = 0.25f;
     public float _wallJumpHeight = 2.4f;
     public float _wallJumpRebound = 3f;
 

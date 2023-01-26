@@ -1105,7 +1105,9 @@ MonoBehaviour:
   _gravity: -15
   _jumpHeight: 1.2
   _lateJumpDelay: 0.1
-  _jumpCooldown: 0.5
+  _jumpCooldown: 0.25
+  _wallJumpHeight: 2.4
+  _wallJumpRebound: 3
   _walkSpeed: 4
   _sprintSpeed: 8
   _sprintStrafeSpeed: 4
