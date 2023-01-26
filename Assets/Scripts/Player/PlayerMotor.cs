@@ -10,15 +10,22 @@ public class PlayerMotor : MonoBehaviour
     private float _crouchedHeight = 1f;
 
     public float _gravity = -15f;
+
     public float _jumpHeight = 1.2f;
     public float _lateJumpDelay = 0.1f;
-    public float _jumpCooldown = 0.25f;
+    public float _jumpCooldown = 0.1f;
+    public float _wallJumpHeight = 2.4f;
+    public float _wallJumpRebound = 3f;
+
+
     public float _walkSpeed = 4f;
     public float _sprintSpeed = 8f;
     public float _sprintStrafeSpeed = 4f;
     public float _sprintAccelTime = 0.75f;
+
     public float _airStrafeAccel = 10f;
     public float _airStrafeMaxVelocity = 8f;
+
     public float _slideCutoffVelocity = 0.2f;
     public float _slideStartVelocity;
     public float _slideFrictionDecel = 12f;
@@ -26,6 +33,7 @@ public class PlayerMotor : MonoBehaviour
     public float _positiveSlopeSlideFactor = 20f;
     public float _negativeSlopeSlideFactor = 40f;
     public float _groundCollisionThreshold = 0.2f;
+
     public float _meleeDistance = 2f;
     public float _meleeCooldown = 0.5f;
     public float _punchBoost = 8f;
@@ -109,7 +117,7 @@ public class PlayerMotor : MonoBehaviour
             if (_isJumping)
             {
                 frameState.Add(PlayerAnim.State.JUMPING);
-                addedVelocity += HandleJump();
+                addedVelocity += HandleJump(_jumpHeight);
             }
 
             if (!_isCrouched)
@@ -291,8 +299,6 @@ public class PlayerMotor : MonoBehaviour
 
         Vector3 addVelocity = Vector3.zero;
 
-        bool wallJumping = false;
-
         if (moveDirection.magnitude > 0)
         {
 
@@ -305,14 +311,6 @@ public class PlayerMotor : MonoBehaviour
             addVelocity += AddVelocityInDirection(_playerVelocity, zDirection, _airStrafeAccel, _airStrafeMaxVelocity);
 
         } else
-        {
-            // check for wall jump
-            if (wallCollisionCheck.CanWallJump())
-            {
-                // TODO: actually handle walljump
-                wallJumping = true;
-            }
-        }
 
         // also need to see if we can still late jump
         if (_wasGrounded)
@@ -320,18 +318,37 @@ public class PlayerMotor : MonoBehaviour
             timers[LATE_JUMP_TIMER].Reset();
         }
 
-        if ((timers[LATE_JUMP_TIMER].CanTriggerEvent() || wallJumping) && _isJumping)
+        if (_isJumping)
         {
-            addVelocity += HandleJump();
+            if (wallCollisionCheck.CanWallJump())
+            {
+                addVelocity += HandleWallJump();
+            }
+            else if (timers[LATE_JUMP_TIMER].CanTriggerEvent())
+            {
+                addVelocity += HandleJump(_jumpHeight);
+            }
         }
+
 
         return addVelocity;
     }
 
-    private Vector3 HandleJump()
+    private Vector3 HandleJump(float jumpHeight)
     {
         Vector3 addedVelocity = Vector3.zero;
-        addedVelocity.y = Mathf.Sqrt(-2 * _gravity * _jumpHeight);
+        addedVelocity.y = Mathf.Sqrt(-2 * _gravity * jumpHeight);
+        return addedVelocity;
+    }
+
+    private Vector3 HandleWallJump()
+    {
+        Vector3 addedVelocity = Vector3.zero;
+
+        addedVelocity += HandleJump(_wallJumpHeight);
+
+        addedVelocity += wallCollisionCheck.getLastHitNormal() * _wallJumpRebound;
+
         return addedVelocity;
     }
 
@@ -402,11 +419,11 @@ public class PlayerMotor : MonoBehaviour
 
     public void Jump()
     {
+        _isJumping = true;
 
         if (timers[JUMP_COOLDOWN_TIMER].CanTriggerEventAndReset())
         {
             // set a flag here so we know we're jumping and can set proper velocity in normal flow
-            _isJumping = true;
         }
     }
 

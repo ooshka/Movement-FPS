@@ -29,10 +29,4 @@ public class GunData : ScriptableObject
     [Header("Reload")]
     public int clipSize;
     public float reloadTime;
-
-    private void OnEnable()
-    {
-        // used for bullets to ignore player collider
-        playerCollider = GameObject.Find("Player").GetComponent<Collider>();
-    }
 }

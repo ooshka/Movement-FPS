@@ -11,6 +11,10 @@ public class WallCollisionCheck : MonoBehaviour
     private readonly float rayDistance = 0.45f;
     public bool debug = true;
 
+    // how's this for hacky? store out last RaycastHit in this so we can access the normal for wall jumping...
+    // TODO: do something less hacky
+    RaycastHit lastHit;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -18,12 +22,10 @@ public class WallCollisionCheck : MonoBehaviour
 
         float extent = transform.localScale.y;
         float spacing = extent * 2 / (numOfCheckPositions - 1);
-        Debug.Log(spacing);
 
         for (float i = -extent; i <= extent * 1.01f; i += spacing)
         {
             positions.Add(i);
-            Debug.Log(i);
         }
        
     }
@@ -31,7 +33,6 @@ public class WallCollisionCheck : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        Debug.Log(CanVault());
     }
 
     private bool CheckPosition(float verticalPosition)
@@ -41,7 +42,7 @@ public class WallCollisionCheck : MonoBehaviour
         {
             Debug.DrawLine(start, start + transform.forward * rayDistance, Color.blue, 0.2f);
         }
-        return Physics.Raycast(start, transform.forward, rayDistance, 1 << LayerMask.NameToLayer("Terrain"));
+        return Physics.Raycast(start, transform.forward, out lastHit, rayDistance, 1 << LayerMask.NameToLayer("Terrain"));
     }
 
     private bool CheckPositions(int start, int end)
@@ -67,5 +68,10 @@ public class WallCollisionCheck : MonoBehaviour
     public bool CanVault()
     {
         return CheckPositions(2, 4) && !CheckPosition(positions[5]);
+    }
+
+    public Vector3 getLastHitNormal()
+    {
+        return lastHit.normal;
     }
 }
