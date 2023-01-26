@@ -5,13 +5,14 @@ public class PlayerMotor : MonoBehaviour
 {
     public Camera cam;
     private CharacterController controller;
+    private WallCollisionCheck wallCollisionCheck;
     private float _standingHeight = 2f;
     private float _crouchedHeight = 1f;
 
     public float _gravity = -15f;
     public float _jumpHeight = 1.2f;
     public float _lateJumpDelay = 0.1f;
-    public float _jumpCooldown = 0.5f;
+    public float _jumpCooldown = 0.25f;
     public float _walkSpeed = 4f;
     public float _sprintSpeed = 8f;
     public float _sprintStrafeSpeed = 4f;
@@ -59,6 +60,7 @@ public class PlayerMotor : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        wallCollisionCheck = GetComponent<WallCollisionCheck>();
         controller = GetComponent<CharacterController>();
         controller.height = _standingHeight;
         _prevPosition = transform.position;
@@ -289,6 +291,8 @@ public class PlayerMotor : MonoBehaviour
 
         Vector3 addVelocity = Vector3.zero;
 
+        bool wallJumping = false;
+
         if (moveDirection.magnitude > 0)
         {
 
@@ -300,6 +304,14 @@ public class PlayerMotor : MonoBehaviour
             Vector3 zDirection = transform.TransformDirection(new Vector3(0, 0, moveDirection.z));
             addVelocity += AddVelocityInDirection(_playerVelocity, zDirection, _airStrafeAccel, _airStrafeMaxVelocity);
 
+        } else
+        {
+            // check for wall jump
+            if (wallCollisionCheck.CanWallJump())
+            {
+                // TODO: actually handle walljump
+                wallJumping = true;
+            }
         }
 
         // also need to see if we can still late jump
@@ -308,7 +320,7 @@ public class PlayerMotor : MonoBehaviour
             timers[LATE_JUMP_TIMER].Reset();
         }
 
-        if (timers[LATE_JUMP_TIMER].CanTriggerEvent() && _isJumping)
+        if ((timers[LATE_JUMP_TIMER].CanTriggerEvent() || wallJumping) && _isJumping)
         {
             addVelocity += HandleJump();
         }
