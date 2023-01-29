@@ -25,6 +25,17 @@ public class PlayerMotor : MonoBehaviour
     [SerializeField]
     private float _climbVelocity = 5f;
 
+    [SerializeField]
+    [Tooltip("We are allowed to vault below this velocity")]
+    private float _vaultVelocityCutoff = 2f;
+    [SerializeField]
+    [Tooltip("Total time taken to execute a vault")]
+    private float _vaultTime = 1f;
+    [SerializeField]
+    [Tooltip("Vertical component of vault velocity, will have to be dialed in to make sure we get enough height")]
+    private float _vaultVelocityVertical = 2.4f;
+    private float _vaultTimer = 0f;
+
     public float _walkSpeed = 4f;
     public float _sprintSpeed = 8f;
     public float _sprintStrafeSpeed = 4f;
@@ -48,6 +59,8 @@ public class PlayerMotor : MonoBehaviour
 
     public bool _isCrouched;
     public bool _isJumping;
+    public bool _isVaulting;
+    public bool _isVaultStarting;
     public bool _isMeleeing;
     public bool _isSliding = false;
     public bool _wasSliding;
@@ -116,53 +129,62 @@ public class PlayerMotor : MonoBehaviour
 
         _secondaryGroundedCheck = false;
         
-        // change the controller's height
-        HandleCrouchHeightChange();
-
-        // need to set our sliding flags regardless of state
-        CalcPlayerSliding();
-
-        // possible player states
-        if (_isGrounded)
+        if (_isVaulting)
         {
-            // we don't want gravity to continually crank up our negative vert velocity up so reset to some small negative value
-            ResetVerticalVelocity();
-
-            // reset our climb counter
-            _climbCounter = _numOfClimbs;
-
-            // we can jump in either crouched or walk/sprint mode
-            if (_isJumping)
-            {
-                frameState.Add(PlayerAnim.State.JUMPING);
-                addedVelocity += HandleJump(_jumpHeight);
-            }
-
-            if (!_isCrouched)
-            {
-                // grounded
-                addedVelocity += HandleGroundedMovement(moveDirection);
-            } else
-            {
-                // crouched
-                addedVelocity += HandleCrouchedMovement(moveDirection);
-            }
+            // experimenting with locking in an actual animation for vaulting
+            HandleVaulting(moveDirection);
         } else
         {
-            // airborn
-            addedVelocity += HandleAirbornMovement(moveDirection);
-        }
+            // change the controller's height
+            HandleCrouchHeightChange();
 
-        // handle melee behaviour
-        // breaks state machine a bit cause we need to check individual states within this,
-        // but it happens across lots of states so who's to say what's best
-        if (_isMeleeing)
-        {
-            addedVelocity += HandleMelee();
-        }
+            // need to set our sliding flags regardless of state
+            CalcPlayerSliding();
 
-        // gravity
-        addedVelocity += new Vector3(0, _gravity * Time.deltaTime, 0);
+            // possible player states
+            if (_isGrounded)
+            {
+                // we don't want gravity to continually crank up our negative vert velocity up so reset to some small negative value
+                ResetVerticalVelocity();
+
+                // reset our climb counter
+                _climbCounter = _numOfClimbs;
+
+                // we can jump in either crouched or walk/sprint mode
+                if (_isJumping)
+                {
+                    frameState.Add(PlayerAnim.State.JUMPING);
+                    addedVelocity += HandleJump(_jumpHeight);
+                }
+
+                if (!_isCrouched)
+                {
+                    // grounded
+                    addedVelocity += HandleGroundedMovement(moveDirection);
+                }
+                else
+                {
+                    // crouched
+                    addedVelocity += HandleCrouchedMovement(moveDirection);
+                }
+            }
+            else
+            {
+                // airborn
+                addedVelocity += HandleAirbornMovement(moveDirection);
+            }
+
+            // handle melee behaviour
+            // breaks state machine a bit cause we need to check individual states within this,
+            // but it happens across lots of states so who's to say what's best
+            if (_isMeleeing)
+            {
+                addedVelocity += HandleMelee();
+            }
+
+            // gravity
+            addedVelocity += new Vector3(0, _gravity * Time.deltaTime, 0);
+        }
 
         // add our new velocity
         _playerVelocity += addedVelocity;
@@ -336,24 +358,33 @@ public class PlayerMotor : MonoBehaviour
             timers[LATE_JUMP_TIMER].Reset();
         }
 
-        if (_isJumping)
+        // if we're holding w
+        if (moveDirection.z > 0)
         {
+            // going to try and do a velocity limit check so we aren't raycasting every frame
+            float forwardVelocity = Vector3.Dot(_playerVelocity, cam.transform.forward);
+            if (wallCollisionCheck.CanVault())
+            {
+                _isVaulting = true;
+                _isVaultStarting = true;
+            }
+            else if (_climbCounter > 0 && wallCollisionCheck.CanClimb() && timers[CLIMB_COOLDOWN_TIMER].CanTriggerEventAndReset())
+            {
+                addedVelocity += Vector3.up * _climbVelocity;
+                _climbCounter--;
+            }
+        }
+        else if (_isJumping)
+        {
+            // wall jump
             if (wallCollisionCheck.CanWallJump())
             {
                 addedVelocity += HandleWallJump();
             }
+            // late jump
             else if (timers[LATE_JUMP_TIMER].CanTriggerEvent())
             {
                 addedVelocity += HandleJump(_jumpHeight);
-            }
-        }
-        // if we're holding w
-        else if (moveDirection.z > 0)
-        {
-            if (_climbCounter > 0 && wallCollisionCheck.CanClimb() && timers[CLIMB_COOLDOWN_TIMER].CanTriggerEventAndReset())
-            {
-                addedVelocity += Vector3.up * _climbVelocity;
-                _climbCounter--;
             }
         }
 
@@ -409,6 +440,35 @@ public class PlayerMotor : MonoBehaviour
             }
         }
         return addedVelocity;
+    }
+
+    private void HandleVaulting(Vector3 moveDirection)
+    {
+        // if we've completed our vault
+        if (_vaultTimer >= _vaultTime)
+        {
+            _isVaulting = false;
+            _vaultTimer = 0f;
+            return;
+        }
+
+        // advance our timer which determines our transition through the vault animation
+        _vaultTimer += Time.deltaTime;
+        // reset our vaulting params
+        if (_isVaultStarting)
+        {
+            _vaultTimer = 0;
+            _isVaultStarting = false;
+        }
+
+        float t = _vaultTimer;
+        float c = 2 * Mathf.PI / (_vaultTime / 2f);
+        float v = _vaultVelocityVertical / 2f;
+
+        float y_velocity = v - v * Mathf.Cos(c * t);
+
+        // directly assign velocity rather than giving additive pieces
+        _playerVelocity.y = y_velocity;
     }
 
     // ---------------------------Util Methods--------------------------------------------------------------
