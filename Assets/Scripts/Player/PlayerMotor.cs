@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class PlayerMotor : MonoBehaviour
 {
-    public Camera cam;
+    private Camera cam;
     private CharacterController controller;
     private WallCollisionCheck wallCollisionCheck;
     private float _standingHeight = 2f;
@@ -13,10 +13,17 @@ public class PlayerMotor : MonoBehaviour
 
     public float _jumpHeight = 1.2f;
     public float _lateJumpDelay = 0.1f;
-    public float _jumpCooldown = 0.25f;
-    public float _wallJumpHeight = 2.4f;
-    public float _wallJumpRebound = 3f;
+    public float _jumpCooldown = 0.5f;
 
+    public float _wallJumpHeight = 1.2f;
+    public float _wallJumpRebound = 2f;
+
+    [SerializeField]
+    private float _climbCooldown = 0.5f;
+    [SerializeField]
+    private int _numOfClimbs = 3;
+    [SerializeField]
+    private float _climbVelocity = 5f;
 
     public float _walkSpeed = 4f;
     public float _sprintSpeed = 8f;
@@ -52,13 +59,16 @@ public class PlayerMotor : MonoBehaviour
     public Vector3 _playerVelocity;
 
     private Vector3 _prevPosition;
-    private Vector3 referenceObjectPosition;
+    private Vector3 _referenceObjectPosition;
     private ControllerColliderHit _lastGroundedHit;
+
+    private int _climbCounter;
 
     private Dictionary<string, Timer> timers = new Dictionary<string, Timer>();
     private readonly string LATE_JUMP_TIMER = "late_jump";
     private readonly string JUMP_COOLDOWN_TIMER = "jump_cooldown";
     private readonly string MELEE_COOLDOWN_TIMER = "melee_cooldown";
+    private readonly string CLIMB_COOLDOWN_TIMER = "climb_cooldown";
 
     // we need a handle on two state lists such that one can always be populated and only updated when needed
     // if we just had one there would be periods of time where it is cleared and filled up (b/c we're using Update for animation and FixedUpdate for physix)
@@ -68,6 +78,7 @@ public class PlayerMotor : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        cam = transform.GetChild(0).gameObject.GetComponent<Camera>();
         wallCollisionCheck = GetComponent<WallCollisionCheck>();
         controller = GetComponent<CharacterController>();
         controller.height = _standingHeight;
@@ -78,6 +89,10 @@ public class PlayerMotor : MonoBehaviour
         timers.Add(LATE_JUMP_TIMER, new Timer(_lateJumpDelay, true));
         timers.Add(JUMP_COOLDOWN_TIMER, new Timer(_jumpCooldown, false));
         timers.Add(MELEE_COOLDOWN_TIMER, new Timer(_meleeCooldown, false));
+        timers.Add(CLIMB_COOLDOWN_TIMER, new Timer(_climbCooldown, false));
+
+        // init our climb counter
+        _climbCounter = _numOfClimbs;
     }
 
     // Update is called once per frame
@@ -112,6 +127,9 @@ public class PlayerMotor : MonoBehaviour
         {
             // we don't want gravity to continually crank up our negative vert velocity up so reset to some small negative value
             ResetVerticalVelocity();
+
+            // reset our climb counter
+            _climbCounter = _numOfClimbs;
 
             // we can jump in either crouched or walk/sprint mode
             if (_isJumping)
@@ -297,18 +315,18 @@ public class PlayerMotor : MonoBehaviour
     {
         frameState.Add(PlayerAnim.State.AIRBORNE);
 
-        Vector3 addVelocity = Vector3.zero;
+        Vector3 addedVelocity = Vector3.zero;
 
         if (moveDirection.magnitude > 0)
         {
 
             // x-plane movement
             Vector3 xDirection = transform.TransformDirection(new Vector3(moveDirection.x, 0, 0));
-            addVelocity += AddVelocityInDirection(_playerVelocity, xDirection, _airStrafeAccel, _airStrafeMaxVelocity);
+            addedVelocity += AddVelocityInDirection(_playerVelocity, xDirection, _airStrafeAccel, _airStrafeMaxVelocity);
 
             // z-plane movement
             Vector3 zDirection = transform.TransformDirection(new Vector3(0, 0, moveDirection.z));
-            addVelocity += AddVelocityInDirection(_playerVelocity, zDirection, _airStrafeAccel, _airStrafeMaxVelocity);
+            addedVelocity += AddVelocityInDirection(_playerVelocity, zDirection, _airStrafeAccel, _airStrafeMaxVelocity);
 
         } else
 
@@ -322,16 +340,25 @@ public class PlayerMotor : MonoBehaviour
         {
             if (wallCollisionCheck.CanWallJump())
             {
-                addVelocity += HandleWallJump();
+                addedVelocity += HandleWallJump();
             }
             else if (timers[LATE_JUMP_TIMER].CanTriggerEvent())
             {
-                addVelocity += HandleJump(_jumpHeight);
+                addedVelocity += HandleJump(_jumpHeight);
+            }
+        }
+        // if we're holding w
+        else if (moveDirection.z > 0)
+        {
+            if (_climbCounter > 0 && wallCollisionCheck.CanClimb() && timers[CLIMB_COOLDOWN_TIMER].CanTriggerEventAndReset())
+            {
+                addedVelocity += Vector3.up * _climbVelocity;
+                _climbCounter--;
             }
         }
 
 
-        return addVelocity;
+        return addedVelocity;
     }
 
     private Vector3 HandleJump(float jumpHeight)
@@ -344,8 +371,12 @@ public class PlayerMotor : MonoBehaviour
     private Vector3 HandleWallJump()
     {
         Vector3 addedVelocity = Vector3.zero;
-
-        addedVelocity += HandleJump(_wallJumpHeight);
+        Vector3 jumpVelocity = HandleJump(_wallJumpHeight);
+        Vector3 wallJumpVelocity = HandleJump(_wallJumpHeight);
+        // only give upwards velocity if we're below or at our wall jump velocity
+        float velocityToAdd = Mathf.Clamp(wallJumpVelocity.y - _playerVelocity.y, 0, wallJumpVelocity.y);
+        wallJumpVelocity.y = velocityToAdd;
+        addedVelocity += wallJumpVelocity;
 
         addedVelocity += wallCollisionCheck.getLastHitNormal() * _wallJumpRebound;
 
@@ -419,11 +450,11 @@ public class PlayerMotor : MonoBehaviour
 
     public void Jump()
     {
-        _isJumping = true;
 
         if (timers[JUMP_COOLDOWN_TIMER].CanTriggerEventAndReset())
         {
             // set a flag here so we know we're jumping and can set proper velocity in normal flow
+            _isJumping = true;
         }
     }
 
@@ -525,7 +556,7 @@ public class PlayerMotor : MonoBehaviour
         // do this by seeing if the y coordinate of the collision matches up with the bottom of the capsule collider
         if (Mathf.Abs(playerCenterY - playerExtentY - hit.point.y) < _groundCollisionThreshold)
         {
-            referenceObjectPosition = transform.position;
+            _referenceObjectPosition = transform.position;
             _lastGroundedHit = hit;
             _secondaryGroundedCheck = true;
         }
