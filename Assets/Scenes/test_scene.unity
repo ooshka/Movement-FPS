@@ -1104,12 +1104,15 @@ MonoBehaviour:
   _gravity: -15
   _jumpHeight: 1.2
   _lateJumpDelay: 0.1
-  _jumpCooldown: 0.3
+  _jumpCooldown: 0.5
   _wallJumpHeight: 1.2
   _wallJumpRebound: 2
   _climbCooldown: 0.5
   _numOfClimbs: 3
   _climbVelocity: 5
+  _vaultVelocityCutoff: 2
+  _vaultTime: 1
+  _vaultVelocityVertical: 2.4
   _walkSpeed: 4
   _sprintSpeed: 8
   _sprintStrafeSpeed: 4
@@ -1129,6 +1132,8 @@ MonoBehaviour:
   _punchBoostYLimiter: 0.5
   _isCrouched: 0
   _isJumping: 0
+  _isVaulting: 0
+  _isVaultStarting: 0
   _isMeleeing: 0
   _isSliding: 0
   _wasSliding: 0
