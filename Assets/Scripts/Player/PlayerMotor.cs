@@ -6,8 +6,9 @@ public class PlayerMotor : MonoBehaviour
     private Camera cam;
     private CharacterController controller;
     private WallCollisionCheck wallCollisionCheck;
-    private float _standingHeight = 2f;
-    private float _crouchedHeight = 1f;
+    private StateController stateController;
+    private readonly float _standingHeight = 2f;
+    private readonly float _crouchedHeight = 1f;
 
     public float _gravity = -15f;
 
@@ -83,16 +84,15 @@ public class PlayerMotor : MonoBehaviour
     private readonly string MELEE_COOLDOWN_TIMER = "melee_cooldown";
     private readonly string CLIMB_COOLDOWN_TIMER = "climb_cooldown";
 
-    // we need a handle on two state lists such that one can always be populated and only updated when needed
-    // if we just had one there would be periods of time where it is cleared and filled up (b/c we're using Update for animation and FixedUpdate for physix)
-    private List<PlayerAnim.State> frameState = new List<PlayerAnim.State>();
-    private List<PlayerAnim.State> playerState = new List<PlayerAnim.State>();
+    private List<StateController.State> frameState = new List<StateController.State>();
 
     // Start is called before the first frame update
     void Start()
     {
         cam = transform.GetChild(0).gameObject.GetComponent<Camera>();
         wallCollisionCheck = GetComponent<WallCollisionCheck>();
+        stateController = GetComponent<StateController>();
+
         controller = GetComponent<CharacterController>();
         controller.height = _standingHeight;
         _prevPosition = transform.position;
@@ -153,7 +153,7 @@ public class PlayerMotor : MonoBehaviour
                 // we can jump in either crouched or walk/sprint mode
                 if (_isJumping)
                 {
-                    frameState.Add(PlayerAnim.State.JUMPING);
+                    frameState.Add(StateController.State.JUMPING);
                     addedVelocity += HandleJump(_jumpHeight);
                 }
 
@@ -214,7 +214,7 @@ public class PlayerMotor : MonoBehaviour
         }
 
         // update our public animation state
-        updateGlobalState();
+        stateController.SetPlayerState(frameState);
     }
 
     private Vector3 HandleGroundedMovement(Vector3 moveDirection)
@@ -224,7 +224,7 @@ public class PlayerMotor : MonoBehaviour
         if (moveDirection.z > 0 && (int)moveDirection.magnitude == 1)
         {
             _isSprinting = true;
-            frameState.Add(PlayerAnim.State.SPRINTING);
+            frameState.Add(StateController.State.SPRINTING);
         }
         else
         {
@@ -258,10 +258,10 @@ public class PlayerMotor : MonoBehaviour
         {
             if (moveDirection.magnitude == 0)
             {
-                frameState.Add(PlayerAnim.State.IDLE);
+                frameState.Add(StateController.State.IDLE);
             } else
             {
-                frameState.Add(PlayerAnim.State.WALKING);
+                frameState.Add(StateController.State.WALKING);
             }
             addVelocity += transform.TransformDirection(moveDirection) * _walkSpeed;
         }
@@ -282,10 +282,10 @@ public class PlayerMotor : MonoBehaviour
             // crouch walking
             if (moveDirection.magnitude == 0)
             {
-                frameState.Add(PlayerAnim.State.CROUCH_IDLE);
+                frameState.Add(StateController.State.CROUCH_IDLE);
             } else
             {
-                frameState.Add(PlayerAnim.State.CROUCH_WALKING);
+                frameState.Add(StateController.State.CROUCH_WALKING);
             }
 
             addVelocity += transform.TransformDirection(moveDirection) * _walkSpeed;
@@ -295,7 +295,7 @@ public class PlayerMotor : MonoBehaviour
             _playerVelocity.z = 0;
         } else
         {
-            frameState.Add(PlayerAnim.State.SLIDING);
+            frameState.Add(StateController.State.SLIDING);
                     
             Vector3 velDirection = _playerVelocity / _playerVelocity.magnitude;
 
@@ -335,7 +335,7 @@ public class PlayerMotor : MonoBehaviour
 
     private Vector3 HandleAirbornMovement(Vector3 moveDirection)
     {
-        frameState.Add(PlayerAnim.State.AIRBORNE);
+        frameState.Add(StateController.State.AIRBORNE);
 
         Vector3 addedVelocity = Vector3.zero;
 
@@ -367,11 +367,24 @@ public class PlayerMotor : MonoBehaviour
             {
                 _isVaulting = true;
                 _isVaultStarting = true;
-            }
-            else if (_climbCounter > 0 && wallCollisionCheck.CanClimb() && timers[CLIMB_COOLDOWN_TIMER].CanTriggerEventAndReset())
+            } else
             {
-                addedVelocity += Vector3.up * _climbVelocity;
-                _climbCounter--;
+                // we need to handle climb animation and our velocity change
+                if (wallCollisionCheck.CanClimb())
+                {
+                    if (_climbCounter > 0 && timers[CLIMB_COOLDOWN_TIMER].CanTriggerEventAndReset())
+                    {
+                        addedVelocity += Vector3.up * _climbVelocity;
+                        _climbCounter--;
+                        frameState.Add(StateController.State.CLIMBING);
+                    }
+                    // if our cooldown timer is currently running it means we're climbing
+                    else if (!timers[CLIMB_COOLDOWN_TIMER].CanTriggerEvent())
+                    {
+                        frameState.Add(StateController.State.CLIMBING);
+                    }
+                }
+               
             }
         }
         else if (_isJumping)
@@ -416,7 +429,7 @@ public class PlayerMotor : MonoBehaviour
 
     private Vector3 HandleMelee()
     {
-        frameState.Add(PlayerAnim.State.MELEE);
+        frameState.Add(StateController.State.MELEE);
 
         Vector3 addedVelocity = Vector3.zero;
         RaycastHit hit;
@@ -451,6 +464,8 @@ public class PlayerMotor : MonoBehaviour
             _vaultTimer = 0f;
             return;
         }
+
+        frameState.Add(StateController.State.VAULTING);
 
         // advance our timer which determines our transition through the vault animation
         _vaultTimer += Time.deltaTime;
@@ -620,25 +635,5 @@ public class PlayerMotor : MonoBehaviour
             _lastGroundedHit = hit;
             _secondaryGroundedCheck = true;
         }
-    }
-
-    private void updateGlobalState()
-    {
-        playerState = new List<PlayerAnim.State>(frameState);
-    }
-
-    public List<PlayerAnim.State> GetState()
-    {
-        List<PlayerAnim.State> stateCopy = new List<PlayerAnim.State>(playerState);
-
-        if (playerState.Contains(PlayerAnim.State.MELEE))
-        {
-            playerState.Remove(PlayerAnim.State.MELEE);
-        }
-        if (playerState.Contains(PlayerAnim.State.JUMPING))
-        {
-            playerState.Remove(PlayerAnim.State.JUMPING);
-        }
-        return stateCopy;
     }
 }
