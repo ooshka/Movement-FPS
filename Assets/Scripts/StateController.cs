@@ -14,7 +14,9 @@ public class StateController : MonoBehaviour
 
     private readonly string MELEE_TRIGGER = "Melee_Trigger";
     private readonly string JUMPING_TRIGGER = "Jump_Trigger";
+    private readonly string VAULT_TRIGGER = "Vault_Trigger";
     private readonly string MOVEMENT_BLEND = "Movement_Blend";
+    private readonly string IS_CLIMBING = "Is_Climbing";
 
     private readonly float blendTime = 0.5f;
 
@@ -25,7 +27,7 @@ public class StateController : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        anim = GameObject.Find("Player_Arms").GetComponent<Animator>();
+        anim = GameObject.Find("PLAYER ARMS").GetComponent<Animator>();
     }
 
     // Update is called once per frame
@@ -35,6 +37,19 @@ public class StateController : MonoBehaviour
         totalState.AddRange(playerState);
         totalState.AddRange(gunState);
         
+        if (totalState.Contains(State.CLIMBING))
+        {
+            anim.SetBool(IS_CLIMBING, true);
+        } else
+        {
+            anim.SetBool(IS_CLIMBING, false);
+        }
+
+        if (totalState.Contains(State.VAULTING))
+        {
+            anim.SetTrigger(VAULT_TRIGGER);
+        }
+
         if (totalState.Contains(State.MELEE))
         {
             anim.SetTrigger(MELEE_TRIGGER);

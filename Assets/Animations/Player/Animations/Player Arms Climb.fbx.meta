@@ -1,14 +1,17 @@
 fileFormatVersion: 2
-guid: 021fa272104d59f4baecb29f53fbc705
+guid: 63dc800c47fedbd4081386cf7c3c40eb
 ModelImporter:
   serializedVersion: 21300
   internalIDToNameTable:
   - first:
-      74: -8759470040028429973
-    second: Human FPS|SMG CROUCH
+      74: -3037334571126484389
+    second: Player Arms (RIG)|Climb
+  - first:
+      74: -1442447639270647808
+    second: Player Arms (RIG)|Climb.001
   externalObjects: {}
   materials:
-    materialImportMode: 0
+    materialImportMode: 2
     materialName: 0
     materialSearch: 1
     materialLocation: 1
@@ -36,18 +39,47 @@ ModelImporter:
     extraUserProperties: []
     clipAnimations:
     - serializedVersion: 16
-      name: Human FPS|SMG CROUCH
-      takeName: Human FPS|SMG CROUCH
+      name: Player Arms (RIG)|Climb
+      takeName: Player Arms (RIG)|Climb
       internalID: 0
       firstFrame: 0
-      lastFrame: 24
+      lastFrame: 36
       wrapMode: 0
       orientationOffsetY: 0
       level: 0
       cycleOffset: 0
       loop: 0
       hasAdditiveReferencePose: 0
-      loopTime: 1
+      loopTime: 0
+      loopBlend: 0
+      loopBlendOrientation: 0
+      loopBlendPositionY: 0
+      loopBlendPositionXZ: 0
+      keepOriginalOrientation: 0
+      keepOriginalPositionY: 1
+      keepOriginalPositionXZ: 0
+      heightFromFeet: 0
+      mirror: 0
+      bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
+      curves: []
+      events: []
+      transformMask: []
+      maskType: 3
+      maskSource: {instanceID: 0}
+      additiveReferencePoseFrame: 0
+    - serializedVersion: 16
+      name: Player Arms (RIG)|Climb.001
+      takeName: Player Arms (RIG)|Climb.001
+      internalID: 0
+      firstFrame: 0
+      lastFrame: 1
+      wrapMode: 0
+      orientationOffsetY: 0
+      level: 0
+      cycleOffset: 0
+      loop: 0
+      hasAdditiveReferencePose: 0
+      loopTime: 0
       loopBlend: 0
       loopBlendOrientation: 0
       loopBlendPositionY: 0
@@ -113,18 +145,18 @@ ModelImporter:
     serializedVersion: 3
     human: []
     skeleton:
-    - name: Player_Arms(Clone)
+    - name: PLAYER ARMS(Clone)
       parentName: 
       position: {x: 0, y: 0, z: 0}
       rotation: {x: 0, y: 0, z: 0, w: 1}
       scale: {x: 1, y: 1, z: 1}
-    - name: Human FPS
-      parentName: Player_Arms(Clone)
+    - name: Player Arms (RIG)
+      parentName: PLAYER ARMS(Clone)
       position: {x: 0, y: 0.023095759, z: -0.010272027}
       rotation: {x: 0.000000021855694, y: 0, z: -0, w: 1}
       scale: {x: 1, y: 1, z: 1}
     - name: Root
-      parentName: Human FPS
+      parentName: Player Arms (RIG)
       position: {x: -0, y: 0, z: 0}
       rotation: {x: -0.000000021855694, y: -0, z: -0, w: 1}
       scale: {x: 1, y: 1, z: 1}
@@ -398,8 +430,8 @@ ModelImporter:
       position: {x: -0, y: 0.09574938, z: 0}
       rotation: {x: 0, y: -0, z: -0, w: 1}
       scale: {x: 1, y: 1, z: 1}
-    - name: FPS ARM
-      parentName: Player_Arms(Clone)
+    - name: Player Arms (MODEL)
+      parentName: PLAYER ARMS(Clone)
       position: {x: -0, y: 0, z: 0}
       rotation: {x: 0.000000021855694, y: 0, z: -0, w: 1}
       scale: {x: 1, y: 1, z: 1}
@@ -415,7 +447,7 @@ ModelImporter:
     hasTranslationDoF: 0
     hasExtraRoot: 1
     skeletonHasParents: 1
-  lastHumanDescriptionAvatarSource: {fileID: 9000000, guid: 2b73e78f8b3d45349af27f561c9d340d, type: 3}
+  lastHumanDescriptionAvatarSource: {fileID: 9000000, guid: 1b2217e398349b4429f24d449d56f27e, type: 3}
   autoGenerateAvatarMappingIfUnspecified: 1
   animationType: 2
   humanoidOversampling: 1
