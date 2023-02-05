@@ -1,11 +1,11 @@
 fileFormatVersion: 2
-guid: 37f8b66eb3547064199a9b43fa59bf35
+guid: 75c2dba35fa568e4e944d3e547ce4f4b
 ModelImporter:
   serializedVersion: 21300
   internalIDToNameTable:
   - first:
-      74: -3466091415547274559
-    second: Player Arms (RIG)|Vault
+      74: -3714731337401008151
+    second: Player Arms (RIG)|Pistol Shoot
   externalObjects: {}
   materials:
     materialImportMode: 0
