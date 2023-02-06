@@ -7,6 +7,7 @@ public abstract class AbstractGun : MonoBehaviour
     private Camera cam;
     private PlayerLook playerLook;
     private StateController stateController;
+    private Crosshair crosshair;
     public Transform muzzle;
     public GunData data;
     public AbstractBullet bullet;
@@ -37,6 +38,8 @@ public abstract class AbstractGun : MonoBehaviour
         playerLook = player.GetComponent<PlayerLook>();
         stateController = player.GetComponent<StateController>();
         data.playerCollider = player.GetComponent<Collider>();
+
+        crosshair = GameObject.Find("HUD_Canvas").GetComponent<Crosshair>();
 
         // initialize Action listeners
         if (data.semiAuto)
@@ -82,9 +85,11 @@ public abstract class AbstractGun : MonoBehaviour
         if (isAds)
         {
             cam.fieldOfView = MotionCurves.LinearInterp(cam.fieldOfView, defaultFOV, defaultFOV * (1 - data.adsFOVChange / 100), data.adsFOVChangeTime);
+            crosshair.HideCrosshair();
         } else
         {
             cam.fieldOfView = MotionCurves.LinearInterp(cam.fieldOfView, defaultFOV * (1 - data.adsFOVChange / 100), defaultFOV, data.adsFOVChangeTime);
+            crosshair.ShowCrosshair();
         }
     }
 

@@ -50,4 +50,20 @@ public class Crosshair : MonoBehaviour
         Image image = container.AddComponent<Image>();
         image.color = data.color;
     }
+
+    public void ShowCrosshair()
+    {
+        if (!gameObject.activeSelf)
+        {
+            gameObject.SetActive(true);
+        }
+    }
+
+    public void HideCrosshair()
+    {
+        if (gameObject.activeSelf)
+        {
+            gameObject.SetActive(false);
+        }
+    }
 }
