@@ -9,16 +9,18 @@ public class StateController : MonoBehaviour
     [HideInInspector]
     public enum State
     {
-        WALKING, SPRINTING, IDLE, CROUCH_IDLE, CROUCH_WALKING, SLIDING, AIRBORNE, MELEE, JUMPING, CLIMBING, VAULTING, SHOOTING, RELOADING
+        WALKING, SPRINTING, IDLE, CROUCH_IDLE, CROUCH_WALKING, SLIDING, AIRBORNE, MELEE, JUMPING, CLIMBING, VAULTING, SHOOTING, RELOADING, ADS
     }
 
     private readonly string MELEE_TRIGGER = "Melee_Trigger";
     private readonly string JUMPING_TRIGGER = "Jump_Trigger";
     private readonly string VAULT_TRIGGER = "Vault_Trigger";
     private readonly string MOVEMENT_BLEND = "Movement_Blend";
-    private readonly string IS_CLIMBING = "Is_Climbing";
     private readonly string SHOOT_TRIGGER = "Shoot_Trigger";
     private readonly string RELOAD_TRIGGER = "Reload_Trigger";
+    private readonly string IS_CLIMBING = "Is_Climbing";
+    private readonly string IS_ADS = "Is_ADS";
+
 
     private readonly float blendTime = 0.5f;
 
@@ -39,7 +41,17 @@ public class StateController : MonoBehaviour
         totalState.Clear();
         totalState.AddRange(playerState);
         totalState.AddRange(gunState);
-        
+        animPlayer.SetBool(IS_ADS, true);
+
+        /**
+        if (totalState.Contains(State.ADS))
+        {
+        } else
+        {
+            animPlayer.SetBool(IS_ADS, false);
+        }
+    **/
+
         if (totalState.Contains(State.SHOOTING))
         {
             animGun.SetTrigger(SHOOT_TRIGGER);

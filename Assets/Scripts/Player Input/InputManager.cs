@@ -8,7 +8,7 @@ public class InputManager : MonoBehaviour
     private PlayerInput.ShootingActions shootingActions;
     private PlayerLook look;
     private PlayerMotor motor;
-    public static Action reloadAction, shootStartAction, shootEndAction;
+    public static Action reloadAction, shootStartAction, shootEndAction, adsStartAction, adsEndAction;
 
     // Start is called before the first frame update
     void Awake()
@@ -31,7 +31,8 @@ public class InputManager : MonoBehaviour
         shootingActions.Shoot.started += ctx => shootStartAction?.Invoke();
         shootingActions.Shoot.canceled += ctx => shootEndAction?.Invoke();
         shootingActions.Reload.performed += ctx => reloadAction?.Invoke();
-
+        shootingActions.ADS.started += ctx => adsStartAction?.Invoke();
+        shootingActions.ADS.canceled += ctx => adsEndAction?.Invoke();
     }
 
     void FixedUpdate()

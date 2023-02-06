@@ -351,6 +351,15 @@ public partial class @PlayerInput : IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""ADS"",
+                    ""type"": ""Button"",
+                    ""id"": ""e1af5c88-9a67-4d0b-aa2a-b473d7ae5681"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -397,6 +406,28 @@ public partial class @PlayerInput : IInputActionCollection2, IDisposable
                     ""action"": ""Reload"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""b2977042-4c0c-4a63-bbd3-5ed16355c069"",
+                    ""path"": ""<Mouse>/rightButton"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""ADS"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""caf45123-73b4-41ad-bc39-4faa15db8c95"",
+                    ""path"": ""<Gamepad>/leftTrigger"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""ADS"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -420,6 +451,7 @@ public partial class @PlayerInput : IInputActionCollection2, IDisposable
         m_Shooting = asset.FindActionMap("Shooting", throwIfNotFound: true);
         m_Shooting_Shoot = m_Shooting.FindAction("Shoot", throwIfNotFound: true);
         m_Shooting_Reload = m_Shooting.FindAction("Reload", throwIfNotFound: true);
+        m_Shooting_ADS = m_Shooting.FindAction("ADS", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -612,12 +644,14 @@ public partial class @PlayerInput : IInputActionCollection2, IDisposable
     private IShootingActions m_ShootingActionsCallbackInterface;
     private readonly InputAction m_Shooting_Shoot;
     private readonly InputAction m_Shooting_Reload;
+    private readonly InputAction m_Shooting_ADS;
     public struct ShootingActions
     {
         private @PlayerInput m_Wrapper;
         public ShootingActions(@PlayerInput wrapper) { m_Wrapper = wrapper; }
         public InputAction @Shoot => m_Wrapper.m_Shooting_Shoot;
         public InputAction @Reload => m_Wrapper.m_Shooting_Reload;
+        public InputAction @ADS => m_Wrapper.m_Shooting_ADS;
         public InputActionMap Get() { return m_Wrapper.m_Shooting; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -633,6 +667,9 @@ public partial class @PlayerInput : IInputActionCollection2, IDisposable
                 @Reload.started -= m_Wrapper.m_ShootingActionsCallbackInterface.OnReload;
                 @Reload.performed -= m_Wrapper.m_ShootingActionsCallbackInterface.OnReload;
                 @Reload.canceled -= m_Wrapper.m_ShootingActionsCallbackInterface.OnReload;
+                @ADS.started -= m_Wrapper.m_ShootingActionsCallbackInterface.OnADS;
+                @ADS.performed -= m_Wrapper.m_ShootingActionsCallbackInterface.OnADS;
+                @ADS.canceled -= m_Wrapper.m_ShootingActionsCallbackInterface.OnADS;
             }
             m_Wrapper.m_ShootingActionsCallbackInterface = instance;
             if (instance != null)
@@ -643,6 +680,9 @@ public partial class @PlayerInput : IInputActionCollection2, IDisposable
                 @Reload.started += instance.OnReload;
                 @Reload.performed += instance.OnReload;
                 @Reload.canceled += instance.OnReload;
+                @ADS.started += instance.OnADS;
+                @ADS.performed += instance.OnADS;
+                @ADS.canceled += instance.OnADS;
             }
         }
     }
@@ -667,5 +707,6 @@ public partial class @PlayerInput : IInputActionCollection2, IDisposable
     {
         void OnShoot(InputAction.CallbackContext context);
         void OnReload(InputAction.CallbackContext context);
+        void OnADS(InputAction.CallbackContext context);
     }
 }

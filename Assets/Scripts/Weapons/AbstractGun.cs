@@ -17,12 +17,14 @@ public abstract class AbstractGun : MonoBehaviour
     private bool isWithinFireRate = true;
     private bool isShooting;
     private bool shouldResetRecoil;
+    private bool isAds = false;
     private int horizontalRecoilDirection = 0;
 
     private readonly Timer recoilTimer = new Timer(0, true);
     private Timer settlingPositionTimer;
     private float settlingAngle;
     private float lastVerticalAngle;
+    private float defaultFOV;
 
     private List<StateController.State> gunState = new List<StateController.State>();
 
@@ -30,6 +32,7 @@ public abstract class AbstractGun : MonoBehaviour
     private void Start()
     {
         cam = GameObject.Find("Main_Camera").GetComponent<Camera>();
+        defaultFOV = cam.fieldOfView;
         GameObject player = GameObject.Find("Player");
         playerLook = player.GetComponent<PlayerLook>();
         stateController = player.GetComponent<StateController>();
@@ -46,6 +49,8 @@ public abstract class AbstractGun : MonoBehaviour
         }
 
         InputManager.reloadAction += Reload;
+        InputManager.adsStartAction += SetADS;
+        InputManager.adsEndAction += SetNotADS;
 
         currentAmmo = data.clipSize;
         settlingPositionTimer = new Timer(data.settlingPositionCooldown, false);
@@ -219,5 +224,17 @@ public abstract class AbstractGun : MonoBehaviour
     private void SetNotShooting()
     {
         isShooting = false;
+    }
+
+    private void SetADS()
+    {
+        gunState.Add(StateController.State.ADS);
+        isAds = true;
+    }
+
+    private void SetNotADS()
+    {
+        gunState.Remove(StateController.State.ADS);
+        isAds = false;
     }
 }

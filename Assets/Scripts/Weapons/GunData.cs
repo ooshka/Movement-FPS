@@ -10,6 +10,10 @@ public class GunData : ScriptableObject
     [Tooltip("in shots per second")]
     public float fireRate;
     public bool semiAuto;
+    [Tooltip("set in %")]
+    public float adsFOVChange;
+    [Tooltip("the amount of time to transition to new fov")]
+    public float adsFOVChangeTime;
 
     [Header("Recoil")]
     public float verticalRecoilVelocity;
