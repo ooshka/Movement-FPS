@@ -43,9 +43,11 @@ public class StateController : MonoBehaviour
         if (totalState.Contains(State.SHOOTING))
         {
             animGun.SetTrigger(SHOOT_TRIGGER);
+            animPlayer.SetTrigger(SHOOT_TRIGGER);
         } else if (totalState.Contains(State.RELOADING))
         {
             animGun.SetTrigger(RELOAD_TRIGGER);
+            animPlayer.SetTrigger(RELOAD_TRIGGER);
         }
 
         if (totalState.Contains(State.CLIMBING))
