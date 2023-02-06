@@ -41,16 +41,15 @@ public class StateController : MonoBehaviour
         totalState.Clear();
         totalState.AddRange(playerState);
         totalState.AddRange(gunState);
-        animPlayer.SetBool(IS_ADS, true);
 
-        /**
         if (totalState.Contains(State.ADS))
         {
-        } else
+            animPlayer.SetBool(IS_ADS, true);
+        }
+        else
         {
             animPlayer.SetBool(IS_ADS, false);
         }
-    **/
 
         if (totalState.Contains(State.SHOOTING))
         {

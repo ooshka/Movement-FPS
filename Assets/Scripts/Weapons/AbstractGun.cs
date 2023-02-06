@@ -77,6 +77,17 @@ public abstract class AbstractGun : MonoBehaviour
         gunState.Remove(StateController.State.RELOADING);
     }
 
+    private void LateUpdate()
+    {
+        if (isAds)
+        {
+            cam.fieldOfView = MotionCurves.LinearInterp(cam.fieldOfView, defaultFOV, defaultFOV * (1 - data.adsFOVChange / 100), data.adsFOVChangeTime);
+        } else
+        {
+            cam.fieldOfView = MotionCurves.LinearInterp(cam.fieldOfView, defaultFOV * (1 - data.adsFOVChange / 100), defaultFOV, data.adsFOVChangeTime);
+        }
+    }
+
     private void Shoot()
     {
         if (!reloading && currentAmmo > 0 && isWithinFireRate)
