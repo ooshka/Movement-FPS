@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class StateController : MonoBehaviour
 {
-    private Animator anim;
+    private Animator animPlayer, animGun;
 
     [HideInInspector]
     public enum State
@@ -17,6 +17,8 @@ public class StateController : MonoBehaviour
     private readonly string VAULT_TRIGGER = "Vault_Trigger";
     private readonly string MOVEMENT_BLEND = "Movement_Blend";
     private readonly string IS_CLIMBING = "Is_Climbing";
+    private readonly string SHOOT_TRIGGER = "Shoot_Trigger";
+    private readonly string RELOAD_TRIGGER = "Reload_Trigger";
 
     private readonly float blendTime = 0.5f;
 
@@ -27,7 +29,8 @@ public class StateController : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        anim = GameObject.Find("PLAYER ARMS").GetComponent<Animator>();
+        animPlayer = GameObject.Find("PLAYER ARMS").GetComponent<Animator>();
+        animGun = GameObject.Find("WeaponHolder").GetComponentInChildren<Animator>();
     }
 
     // Update is called once per frame
@@ -37,40 +40,49 @@ public class StateController : MonoBehaviour
         totalState.AddRange(playerState);
         totalState.AddRange(gunState);
         
+        if (totalState.Contains(State.SHOOTING))
+        {
+            animGun.SetTrigger(SHOOT_TRIGGER);
+        } else if (totalState.Contains(State.RELOADING))
+        {
+            animGun.SetTrigger(RELOAD_TRIGGER);
+        }
+
         if (totalState.Contains(State.CLIMBING))
         {
-            anim.SetBool(IS_CLIMBING, true);
+            animPlayer.SetBool(IS_CLIMBING, true);
         } else
         {
-            anim.SetBool(IS_CLIMBING, false);
+            animPlayer.SetBool(IS_CLIMBING, false);
         }
 
         if (totalState.Contains(State.VAULTING))
         {
-            anim.SetTrigger(VAULT_TRIGGER);
-        }
-
-        if (totalState.Contains(State.MELEE))
+            animPlayer.SetTrigger(VAULT_TRIGGER);
+        } else
         {
-            anim.SetTrigger(MELEE_TRIGGER);
-            playerState.Remove(State.MELEE);
-        }
-        else if (totalState.Contains(State.JUMPING))
-        {
-            anim.SetTrigger(JUMPING_TRIGGER);
-            playerState.Remove(State.JUMPING);
-        }
-        else if (totalState.Contains(State.SPRINTING))
-        {
-            anim.SetFloat(MOVEMENT_BLEND, 1f, blendTime, Time.deltaTime);
-        }
-        else if (totalState.Contains(State.IDLE))
-        {
-            anim.SetFloat(MOVEMENT_BLEND, 0f, blendTime, Time.deltaTime);
-        }
-        else if (totalState.Contains(State.WALKING))
-        {
-            anim.SetFloat(MOVEMENT_BLEND, 0.5f, blendTime, Time.deltaTime);
+            if (totalState.Contains(State.MELEE))
+            {
+                animPlayer.SetTrigger(MELEE_TRIGGER);
+                playerState.Remove(State.MELEE);
+            }
+            else if (totalState.Contains(State.JUMPING))
+            {
+                animPlayer.SetTrigger(JUMPING_TRIGGER);
+                playerState.Remove(State.JUMPING);
+            }
+            else if (totalState.Contains(State.SPRINTING))
+            {
+                animPlayer.SetFloat(MOVEMENT_BLEND, 1f, blendTime, Time.deltaTime);
+            }
+            else if (totalState.Contains(State.IDLE))
+            {
+                animPlayer.SetFloat(MOVEMENT_BLEND, 0f, blendTime, Time.deltaTime);
+            }
+            else if (totalState.Contains(State.WALKING))
+            {
+                animPlayer.SetFloat(MOVEMENT_BLEND, 0.5f, blendTime, Time.deltaTime);
+            }
         }
     }
 

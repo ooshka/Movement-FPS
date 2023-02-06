@@ -1,15 +1,16 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public abstract class AbstractGun : MonoBehaviour
 {
     private Camera cam;
     private PlayerLook playerLook;
+    private StateController stateController;
     public Transform muzzle;
     public GunData data;
     public AbstractBullet bullet;
 
-    [SerializeField]
     private float currentAmmo;
 
     private bool reloading = false;
@@ -23,12 +24,15 @@ public abstract class AbstractGun : MonoBehaviour
     private float settlingAngle;
     private float lastVerticalAngle;
 
+    private List<StateController.State> gunState = new List<StateController.State>();
+
     // Start is called before the first frame update
     private void Start()
     {
         cam = GameObject.Find("Main_Camera").GetComponent<Camera>();
         GameObject player = GameObject.Find("Player");
         playerLook = player.GetComponent<PlayerLook>();
+        stateController = player.GetComponent<StateController>();
         data.playerCollider = player.GetComponent<Collider>();
 
         // initialize Action listeners
@@ -62,12 +66,17 @@ public abstract class AbstractGun : MonoBehaviour
         // we store this to check if we aim upwards in PlayerLook
         // if we do then reset our settling position so we don't get outrageously large crosshair recoveries
         lastVerticalAngle = cam.transform.forward.y;
+
+        stateController.SetGunState(gunState);
+        gunState.Remove(StateController.State.SHOOTING);
+        gunState.Remove(StateController.State.RELOADING);
     }
 
     private void Shoot()
     {
         if (!reloading && currentAmmo > 0 && isWithinFireRate)
         {
+            gunState.Add(StateController.State.SHOOTING);
             // TODO: we may want to recycle bullets rather than instantiate
             AbstractBullet bullet = Instantiate(this.bullet, muzzle.position, Quaternion.identity);
             bullet.transform.forward = CalcShotDirection();
@@ -100,6 +109,7 @@ public abstract class AbstractGun : MonoBehaviour
 
     private IEnumerator DoReload()
     {
+        gunState.Add(StateController.State.RELOADING);
         reloading = true;
         Debug.Log("Reloading");
 

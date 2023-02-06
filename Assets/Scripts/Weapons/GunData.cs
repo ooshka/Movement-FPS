@@ -6,7 +6,7 @@ public class GunData : ScriptableObject
     [Header("Meta Data")]
     public new string name;
     [HideInInspector]
-    public Collider playerCollider;
+    public Collider playerCollider = null;
     [Tooltip("in shots per second")]
     public float fireRate;
     public bool semiAuto;
