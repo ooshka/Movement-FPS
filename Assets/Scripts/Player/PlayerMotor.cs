@@ -465,8 +465,6 @@ public class PlayerMotor : MonoBehaviour
             return;
         }
 
-        frameState.Add(StateController.State.VAULTING);
-
         // advance our timer which determines our transition through the vault animation
         _vaultTimer += Time.deltaTime;
         // reset our vaulting params
@@ -474,6 +472,9 @@ public class PlayerMotor : MonoBehaviour
         {
             _vaultTimer = 0;
             _isVaultStarting = false;
+
+            // only need to trigger once as the animation can't be interrupted
+            frameState.Add(StateController.State.VAULTING);
         }
 
         float t = _vaultTimer;
