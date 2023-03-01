@@ -2,13 +2,17 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class UITarget : MonoBehaviour
+public class EnemyUI : MonoBehaviour
 {
-    [SerializeField]
     private Transform target;
 
     [SerializeField]
     private float offset;
+
+    public void SetTarget(Transform target)
+    {
+        this.target = target;
+    }
 
     // Update is called once per frame
     void Update()

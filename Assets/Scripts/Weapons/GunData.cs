@@ -1,6 +1,6 @@
 using UnityEngine;
 
-[CreateAssetMenu(menuName = "Weapon/Gun")]
+[CreateAssetMenu(menuName = "Weapon/GunData")]
 public class GunData : ScriptableObject
 {
     [Header("Meta Data")]
