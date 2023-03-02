@@ -56,4 +56,9 @@ public class Healthbar : MonoBehaviour
         _maxHealth = maxHealth;
     }
 
+    public void SetCurrentHealth(float currentHealth)
+    {
+        _currentHealth = Mathf.Clamp(currentHealth, 0, _maxHealth);
+    }
+
 }
