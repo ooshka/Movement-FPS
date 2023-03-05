@@ -63,15 +63,17 @@ public class PlayerMotor : MonoBehaviour
 
     [Header("Sliding")]
     [SerializeField]
-    private float _slideCutoffVelocity = 0.2f;
+    private float _slideCutoffVelocity = 1f;
     [SerializeField]
-    private float _slideFrictionDecel = 12f;
+    private float _slideFrictionDecel = 10f;
     [SerializeField]
-    private float _slideBoost = 4.0f;
+    private float _slideBoost = 5.0f;
     [SerializeField]
+    [Tooltip("Multiplied by the slope angle and added to the influence of the slope on sliding acceleration")]
     private float _positiveSlopeSlideFactor = 20f;
     [SerializeField]
-    private float _negativeSlopeSlideFactor = 40f;
+    [Tooltip("Multiplied by the slope angle and added to the influence of the slope on sliding acceleration")]
+    private float _negativeSlopeSlideFactor = 30f;
 
     private float _slideStartVelocity;
 
@@ -82,9 +84,10 @@ public class PlayerMotor : MonoBehaviour
     [SerializeField]
     private float _meleeCooldown = 0.5f;
     [SerializeField]
-    private float _punchBoost = 8f;
+    private float _punchBoost = 3f;
     [SerializeField]
-    private float _punchBoostYLimiter = 0.5f;
+    [Tooltip("Multiplied by the y velocity of the punch boost")]
+    private float _punchBoostYLimiter = 1f;
 
     [Header("Flags")]
     [SerializeField]
