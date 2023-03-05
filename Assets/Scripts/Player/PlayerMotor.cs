@@ -151,7 +151,7 @@ public class PlayerMotor : MonoBehaviour
                 _climbCounter = _numOfClimbs;
 
                 // we can jump in either crouched or walk/sprint mode
-                if (_isJumping)
+                if (_isJumping && timers[JUMP_COOLDOWN_TIMER].CanTriggerEvent())
                 {
                     frameState.Add(StateController.State.JUMPING);
                     addedVelocity += HandleJump(_jumpHeight);
@@ -335,13 +335,13 @@ public class PlayerMotor : MonoBehaviour
 
     private Vector3 HandleAirbornMovement(Vector3 moveDirection)
     {
+
         frameState.Add(StateController.State.AIRBORNE);
 
         Vector3 addedVelocity = Vector3.zero;
 
         if (moveDirection.magnitude > 0)
         {
-
             // x-plane movement
             Vector3 xDirection = transform.TransformDirection(new Vector3(moveDirection.x, 0, 0));
             addedVelocity += AddVelocityInDirection(_playerVelocity, xDirection, _airStrafeAccel, _airStrafeMaxVelocity);
@@ -350,7 +350,38 @@ public class PlayerMotor : MonoBehaviour
             Vector3 zDirection = transform.TransformDirection(new Vector3(0, 0, moveDirection.z));
             addedVelocity += AddVelocityInDirection(_playerVelocity, zDirection, _airStrafeAccel, _airStrafeMaxVelocity);
 
-        } else
+            // if we're holding w
+            if (moveDirection.z > 0)
+            {
+                // going to try and do a velocity limit check so we aren't raycasting every frame
+                float forwardVelocity = Vector3.Dot(_playerVelocity, cam.transform.forward);
+                if (wallCollisionCheck.CanVault())
+                {
+                    _isVaulting = true;
+                    _isVaultStarting = true;
+                }
+                else
+                {
+                    // we need to handle climb animation and our velocity change
+                    if (wallCollisionCheck.CanClimb())
+                    {
+                        if (_climbCounter > 0 && timers[CLIMB_COOLDOWN_TIMER].CanTriggerEventAndReset())
+                        {
+                            addedVelocity += Vector3.up * _climbVelocity;
+                            _climbCounter--;
+                            frameState.Add(StateController.State.CLIMBING);
+                        }
+                        // if our cooldown timer is currently running it means we're climbing
+                        else if (!timers[CLIMB_COOLDOWN_TIMER].CanTriggerEvent())
+                        {
+                            frameState.Add(StateController.State.CLIMBING);
+                        }
+                    }
+
+                }
+            }
+
+        }
 
         // also need to see if we can still late jump
         if (_wasGrounded)
@@ -358,36 +389,7 @@ public class PlayerMotor : MonoBehaviour
             timers[LATE_JUMP_TIMER].Reset();
         }
 
-        // if we're holding w
-        if (moveDirection.z > 0)
-        {
-            // going to try and do a velocity limit check so we aren't raycasting every frame
-            float forwardVelocity = Vector3.Dot(_playerVelocity, cam.transform.forward);
-            if (wallCollisionCheck.CanVault())
-            {
-                _isVaulting = true;
-                _isVaultStarting = true;
-            } else
-            {
-                // we need to handle climb animation and our velocity change
-                if (wallCollisionCheck.CanClimb())
-                {
-                    if (_climbCounter > 0 && timers[CLIMB_COOLDOWN_TIMER].CanTriggerEventAndReset())
-                    {
-                        addedVelocity += Vector3.up * _climbVelocity;
-                        _climbCounter--;
-                        frameState.Add(StateController.State.CLIMBING);
-                    }
-                    // if our cooldown timer is currently running it means we're climbing
-                    else if (!timers[CLIMB_COOLDOWN_TIMER].CanTriggerEvent())
-                    {
-                        frameState.Add(StateController.State.CLIMBING);
-                    }
-                }
-               
-            }
-        }
-        else if (_isJumping)
+        if (_isJumping && timers[JUMP_COOLDOWN_TIMER].CanTriggerEvent())
         {
             // wall jump
             if (wallCollisionCheck.CanWallJump())
@@ -401,7 +403,6 @@ public class PlayerMotor : MonoBehaviour
             }
         }
 
-
         return addedVelocity;
     }
 
@@ -409,6 +410,7 @@ public class PlayerMotor : MonoBehaviour
     {
         Vector3 addedVelocity = Vector3.zero;
         addedVelocity.y = Mathf.Sqrt(-2 * _gravity * jumpHeight);
+        timers[JUMP_COOLDOWN_TIMER].Reset();
         return addedVelocity;
     }
 
@@ -526,12 +528,8 @@ public class PlayerMotor : MonoBehaviour
 
     public void Jump()
     {
-
-        if (timers[JUMP_COOLDOWN_TIMER].CanTriggerEventAndReset())
-        {
-            // set a flag here so we know we're jumping and can set proper velocity in normal flow
-            _isJumping = true;
-        }
+        // set a flag here so we know we're jumping and can set proper velocity in normal flow
+        _isJumping = true;  
     }
 
     public void Melee()
