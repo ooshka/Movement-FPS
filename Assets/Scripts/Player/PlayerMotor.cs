@@ -69,7 +69,7 @@ public class PlayerMotor : MonoBehaviour
     [SerializeField]
     private float _slideBoost = 5.0f;
     [SerializeField]
-    private float _slidBoostMaxVelocity = 20f;
+    private float _slidBoostMaxVelocity = 12f;
     [SerializeField]
     [Tooltip("Multiplied by the slope angle and added to the influence of the slope on sliding acceleration")]
     private float _positiveSlopeSlideFactor = 20f;
