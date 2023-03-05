@@ -759,12 +759,14 @@ MonoBehaviour:
   _slideCutoffVelocity: 1
   _slideFrictionDecel: 12
   _slideBoost: 5
+  _slidBoostMaxVelocity: 10
   _positiveSlopeSlideFactor: 20
   _negativeSlopeSlideFactor: 30
   _meleeDistance: 2
   _meleeCooldown: 0.5
-  _punchBoost: 3
-  _punchBoostYLimiter: 1
+  _punchBoost: 5
+  _punchBoostMaxVelocity: 15
+  _punchBoostYLimiter: 0.7
   _isCrouched: 0
   _isJumping: 0
   _isVaulting: 0
