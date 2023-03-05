@@ -687,6 +687,10 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7699195966623352321, guid: d93057f3985ce8a43a75c45d4b0fada2, type: 3}
+      propertyPath: field of view
+      value: 70
+      objectReference: {fileID: 0}
+    - target: {fileID: 7699195966623352321, guid: d93057f3985ce8a43a75c45d4b0fada2, type: 3}
       propertyPath: near clip plane
       value: 0.01
       objectReference: {fileID: 0}
@@ -723,7 +727,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   cam: {fileID: 1896941129}
-  sensitivity: 30
+  sensitivity: 16
 --- !u!114 &1896941131
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -736,31 +740,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3f5a2ea2f34dbf6489f164751cc7aeb0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _gravity: -15
+  _gravity: -17
   _jumpHeight: 1.2
-  _lateJumpDelay: 0.1
   _jumpCooldown: 0.25
-  _wallJumpHeight: 1.2
-  _wallJumpRebound: 2
+  _lateJumpDelay: 0.1
+  _wallJumpReboundVelocity: 2
   _climbCooldown: 0.5
   _numOfClimbs: 3
-  _climbVelocity: 5
+  _climbHeight: 0.9
   _vaultVelocityCutoff: 2
   _vaultTime: 1
   _vaultVelocityVertical: 2.4
-  _walkSpeed: 4
-  _sprintSpeed: 8
-  _sprintStrafeSpeed: 4
+  _walkSpeed: 5
+  _sprintSpeed: 7
   _sprintAccelTime: 0.75
-  _airStrafeAccel: 10
-  _airStrafeMaxVelocity: 8
+  _groundCollisionThreshold: 0.2
+  _airStrafeAccel: 12
   _slideCutoffVelocity: 0.2
-  _slideStartVelocity: 0
   _slideFrictionDecel: 12
   _slideBoost: 4
   _positiveSlopeSlideFactor: 20
   _negativeSlopeSlideFactor: 40
-  _groundCollisionThreshold: 0.2
   _meleeDistance: 2
   _meleeCooldown: 0.5
   _punchBoost: 8

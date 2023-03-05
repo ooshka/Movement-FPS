@@ -10,22 +10,28 @@ public class PlayerMotor : MonoBehaviour
     private readonly float _standingHeight = 2f;
     private readonly float _crouchedHeight = 1f;
 
-    public float _gravity = -15f;
+    [Header("Jumping")]
+    [SerializeField]
+    private float _gravity = -17f;
+    [SerializeField]
+    private float _jumpHeight = 1.2f;
+    [SerializeField]
+    private float _jumpCooldown = 0.25f;
+    [SerializeField]
+    private float _lateJumpDelay = 0.1f;
+    [SerializeField]
+    [Tooltip("Horizontal rebound velocity")]
+    private float _wallJumpReboundVelocity = 2f;
 
-    public float _jumpHeight = 1.2f;
-    public float _lateJumpDelay = 0.1f;
-    public float _jumpCooldown = 0.5f;
-
-    public float _wallJumpHeight = 1.2f;
-    public float _wallJumpRebound = 2f;
-
+    [Header("Climbing")]
     [SerializeField]
     private float _climbCooldown = 0.5f;
     [SerializeField]
     private int _numOfClimbs = 3;
     [SerializeField]
-    private float _climbVelocity = 5f;
+    private float _climbHeight = 0.9f;
 
+    [Header("Vaulting")]
     [SerializeField]
     [Tooltip("We are allowed to vault below this velocity")]
     private float _vaultVelocityCutoff = 2f;
@@ -35,42 +41,77 @@ public class PlayerMotor : MonoBehaviour
     [SerializeField]
     [Tooltip("Vertical component of vault velocity, will have to be dialed in to make sure we get enough height")]
     private float _vaultVelocityVertical = 2.4f;
+
     private float _vaultTimer = 0f;
 
-    public float _walkSpeed = 4f;
-    public float _sprintSpeed = 8f;
-    public float _sprintStrafeSpeed = 4f;
-    public float _sprintAccelTime = 0.75f;
+    [Header("Grounded Movement")]
+    [SerializeField]
+    private float _walkSpeed = 5f;
+    [SerializeField]
+    private float _sprintSpeed = 7f;
+    [SerializeField]
+    private float _sprintAccelTime = 0.75f;
+    [SerializeField]
+    private float _groundCollisionThreshold = 0.2f;
 
-    public float _airStrafeAccel = 10f;
-    public float _airStrafeMaxVelocity = 8f;
+    private float _sprintStrafeSpeed;
 
-    public float _slideCutoffVelocity = 0.2f;
-    public float _slideStartVelocity;
-    public float _slideFrictionDecel = 12f;
-    public float _slideBoost = 4.0f;
-    public float _positiveSlopeSlideFactor = 20f;
-    public float _negativeSlopeSlideFactor = 40f;
-    public float _groundCollisionThreshold = 0.2f;
 
-    public float _meleeDistance = 2f;
-    public float _meleeCooldown = 0.5f;
-    public float _punchBoost = 8f;
-    public float _punchBoostYLimiter = 0.5f;
+    [Header("Airborne Movement")]
+    public float _airStrafeAccel = 12f;
+    private float _airStrafeMaxVelocity;
 
+    [Header("Sliding")]
+    [SerializeField]
+    private float _slideCutoffVelocity = 0.2f;
+    [SerializeField]
+    private float _slideFrictionDecel = 12f;
+    [SerializeField]
+    private float _slideBoost = 4.0f;
+    [SerializeField]
+    private float _positiveSlopeSlideFactor = 20f;
+    [SerializeField]
+    private float _negativeSlopeSlideFactor = 40f;
+
+    private float _slideStartVelocity;
+
+
+    [Header("Melee/Punch Boost")]
+    [SerializeField]
+    private float _meleeDistance = 2f;
+    [SerializeField]
+    private float _meleeCooldown = 0.5f;
+    [SerializeField]
+    private float _punchBoost = 8f;
+    [SerializeField]
+    private float _punchBoostYLimiter = 0.5f;
+
+    [Header("Flags")]
+    [SerializeField]
     public bool _isCrouched;
-    public bool _isJumping;
-    public bool _isVaulting;
-    public bool _isVaultStarting;
-    public bool _isMeleeing;
-    public bool _isSliding = false;
-    public bool _wasSliding;
-    public bool _isSprinting;
-    public bool _isGrounded;
-    public bool _wasGrounded;
-    public bool _secondaryGroundedCheck;
+    [SerializeField]
+    private bool _isJumping;
+    [SerializeField]
+    private bool _isVaulting;
+    [SerializeField]
+    private bool _isVaultStarting;
+    [SerializeField]
+    private bool _isMeleeing;
+    [SerializeField]
+    private bool _isSliding = false;
+    [SerializeField]
+    private bool _wasSliding;
+    [SerializeField]
+    private bool _isSprinting;
+    [SerializeField]
+    private bool _isGrounded;
+    [SerializeField]
+    private bool _wasGrounded;
+    [SerializeField]
+    private bool _secondaryGroundedCheck;
 
-    public Vector3 _playerVelocity;
+    [SerializeField]
+    private Vector3 _playerVelocity;
 
     private Vector3 _prevPosition;
     private Vector3 _referenceObjectPosition;
@@ -96,7 +137,9 @@ public class PlayerMotor : MonoBehaviour
         controller = GetComponent<CharacterController>();
         controller.height = _standingHeight;
         _prevPosition = transform.position;
-        _slideStartVelocity = 0.95f * _sprintSpeed;
+        _slideStartVelocity = 0.90f * _sprintSpeed;
+        _sprintStrafeSpeed = _walkSpeed;
+        _airStrafeMaxVelocity = _walkSpeed;
 
         // init all of our timers
         timers.Add(LATE_JUMP_TIMER, new Timer(_lateJumpDelay, true));
@@ -367,7 +410,7 @@ public class PlayerMotor : MonoBehaviour
                     {
                         if (_climbCounter > 0 && timers[CLIMB_COOLDOWN_TIMER].CanTriggerEventAndReset())
                         {
-                            addedVelocity += Vector3.up * _climbVelocity;
+                            addedVelocity += HandleJump(_climbHeight);
                             _climbCounter--;
                             frameState.Add(StateController.State.CLIMBING);
                         }
@@ -417,14 +460,13 @@ public class PlayerMotor : MonoBehaviour
     private Vector3 HandleWallJump()
     {
         Vector3 addedVelocity = Vector3.zero;
-        Vector3 jumpVelocity = HandleJump(_wallJumpHeight);
-        Vector3 wallJumpVelocity = HandleJump(_wallJumpHeight);
+        Vector3 wallJumpVelocity = HandleJump(_jumpHeight);
         // only give upwards velocity if we're below or at our wall jump velocity
         float velocityToAdd = Mathf.Clamp(wallJumpVelocity.y - _playerVelocity.y, 0, wallJumpVelocity.y);
         wallJumpVelocity.y = velocityToAdd;
         addedVelocity += wallJumpVelocity;
 
-        addedVelocity += wallCollisionCheck.getLastHitNormal() * _wallJumpRebound;
+        addedVelocity += wallCollisionCheck.getLastHitNormal() * _wallJumpReboundVelocity;
 
         return addedVelocity;
     }
