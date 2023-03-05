@@ -71,6 +71,8 @@ public class PlayerMotor : MonoBehaviour
     [SerializeField]
     private float _slideBoost = 5.0f;
     [SerializeField]
+    private float _slidBoostMaxVelocity = 12f;
+    [SerializeField]
     [Tooltip("Multiplied by the slope angle and added to the influence of the slope on sliding acceleration")]
     private float _positiveSlopeSlideFactor = 20f;
     [SerializeField]
@@ -86,10 +88,12 @@ public class PlayerMotor : MonoBehaviour
     [SerializeField]
     private float _meleeCooldown = 0.5f;
     [SerializeField]
-    private float _punchBoost = 3f;
+    private float _punchBoost = 5f;
+    [SerializeField]
+    private float _punchBoostMaxVelocity = 12f;
     [SerializeField]
     [Tooltip("Multiplied by the y velocity of the punch boost")]
-    private float _punchBoostYLimiter = 1f;
+    private float _punchBoostYLimiter = 0.7f;
 
     [Header("Flags")]
     [SerializeField]
@@ -350,8 +354,7 @@ public class PlayerMotor : MonoBehaviour
             // we be boostin
             if (_wasSliding == false)
             {
-                Vector3 _slideBoostVelocity = velDirection * _slideBoost;
-                addVelocity += _slideBoostVelocity;
+                addVelocity += AddVelocityInDirection(_playerVelocity, velDirection, _slideBoost, _slidBoostMaxVelocity);
             }
 
             // let the slope boost or impede us based on angle
@@ -392,11 +395,11 @@ public class PlayerMotor : MonoBehaviour
         {
             // x-plane movement
             Vector3 xDirection = transform.TransformDirection(new Vector3(moveDirection.x, 0, 0));
-            addedVelocity += AddVelocityInDirection(_playerVelocity, xDirection, _airStrafeAccel, _airStrafeMaxVelocity);
+            addedVelocity += AddVelocityInDirection(_playerVelocity, xDirection, _airStrafeAccel * Time.deltaTime, _airStrafeMaxVelocity);
 
             // z-plane movement
             Vector3 zDirection = transform.TransformDirection(new Vector3(0, 0, moveDirection.z));
-            addedVelocity += AddVelocityInDirection(_playerVelocity, zDirection, _airStrafeAccel, _airStrafeMaxVelocity);
+            addedVelocity += AddVelocityInDirection(_playerVelocity, zDirection, _airStrafeAccel * Time.deltaTime, _airStrafeMaxVelocity);
 
             // if we're holding w
             if (moveDirection.z > 0)
@@ -492,7 +495,7 @@ public class PlayerMotor : MonoBehaviour
                 // only want to punch boost if we are crouched or airborne
                 if (!_isGrounded || (_isGrounded && _isCrouched))
                 {
-                    addedVelocity += (-cam.transform.forward.normalized * _punchBoost);
+                    addedVelocity += AddVelocityInDirection(_playerVelocity, -cam.transform.forward.normalized, _punchBoost, _punchBoostMaxVelocity);
                     addedVelocity.y *= _punchBoostYLimiter;
                     if (_isGrounded && _isCrouched)
                     {
@@ -557,13 +560,11 @@ public class PlayerMotor : MonoBehaviour
         }
     }
 
-    private Vector3 AddVelocityInDirection(Vector3 currentVelocity, Vector3 direction, float acceleration, float maxVelocity)
+    private Vector3 AddVelocityInDirection(Vector3 currentVelocity, Vector3 direction, float additionalVelocity, float maxVelocity)
     {
         float velInMoveDirection = Vector3.Dot(direction, currentVelocity) / direction.magnitude;
 
         velInMoveDirection = Mathf.Max(0, velInMoveDirection);
-
-        float additionalVelocity = acceleration * Time.deltaTime;
 
         if (velInMoveDirection + additionalVelocity >= maxVelocity)
         {
