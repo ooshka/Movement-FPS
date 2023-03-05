@@ -48,6 +48,8 @@ public class PlayerMotor : MonoBehaviour
     [SerializeField]
     private float _walkSpeed = 5f;
     [SerializeField]
+    private float _crouchWalkSpeed = 3f;
+    [SerializeField]
     private float _sprintSpeed = 7f;
     [SerializeField]
     private float _sprintAccelTime = 0.75f;
@@ -334,7 +336,7 @@ public class PlayerMotor : MonoBehaviour
                 frameState.Add(StateController.State.CROUCH_WALKING);
             }
 
-            addVelocity += transform.TransformDirection(moveDirection) * _walkSpeed;
+            addVelocity += transform.TransformDirection(moveDirection) * _crouchWalkSpeed;
 
             // need to ostensibly "stop" our horizontal velocity because we're only going to be moving exactly as far as this method wants
             _playerVelocity.x = 0;
