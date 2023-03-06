@@ -33,7 +33,7 @@ public class WallCollisionCheck : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        CanVault();
+        
     }
 
     private bool CheckPosition(float verticalPosition)
@@ -69,6 +69,11 @@ public class WallCollisionCheck : MonoBehaviour
     public bool CanVault()
     {
         return CheckPositions(2, 4) && !CheckPosition(positions[5]);
+    }
+
+    public bool CanContinueVaulting()
+    {
+        return CheckPosition(positions[0]);
     }
 
     public Vector3 getLastHitNormal()

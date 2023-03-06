@@ -509,9 +509,18 @@ public class PlayerMotor : MonoBehaviour
 
     private void HandleVaulting(Vector3 moveDirection)
     {
-        // if we've completed our vault
         if (_vaultTimer >= _vaultTime)
         {
+            _isVaulting = false;
+            _vaultTimer = 0f;
+            return;
+        }
+
+        // we might need to cancel the vault if we're no longer touching the ledge
+        // but only do so if we aren't almost all the way through the animation
+        if (!wallCollisionCheck.CanContinueVaulting() && _vaultTimer / _vaultTime < 0.9)
+        {
+            frameState.Add(StateController.State.VAULT_CANCEL);
             _isVaulting = false;
             _vaultTimer = 0f;
             return;
@@ -525,7 +534,6 @@ public class PlayerMotor : MonoBehaviour
             _vaultTimer = 0;
             _isVaultStarting = false;
 
-            // only need to trigger once as the animation can't be interrupted
             frameState.Add(StateController.State.VAULTING);
         }
 
