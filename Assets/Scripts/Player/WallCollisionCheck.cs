@@ -68,7 +68,7 @@ public class WallCollisionCheck : MonoBehaviour
 
     public bool CanVault()
     {
-        return CheckPositions(2, 4) && !CheckPosition(positions[5]);
+        return !CheckPosition(positions[5]) && CheckPositions(2, 4);
     }
 
     public bool CanContinueVaulting()
@@ -76,7 +76,7 @@ public class WallCollisionCheck : MonoBehaviour
         return CheckPosition(positions[0]);
     }
 
-    public Vector3 getLastHitNormal()
+    public Vector3 GetLastHitNormal()
     {
         return lastHit.normal;
     }

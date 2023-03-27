@@ -25,7 +25,7 @@ public class PlayerMotor : MonoBehaviour
 
     [Header("Climbing")]
     [SerializeField]
-    private float _climbCooldown = 0.5f;
+    private float _climbCooldown = 0.4f;
     [SerializeField]
     private int _numOfClimbs = 3;
     [SerializeField]
@@ -45,6 +45,8 @@ public class PlayerMotor : MonoBehaviour
     [SerializeField]
     [Tooltip("Vertical component of vault velocity, will have to be dialed in to make sure we get enough height")]
     private float _vaultVelocityVertical = 2.4f;
+    [SerializeField]
+    private float _vaultHorizontalDeceleration = 20f;
 
     private float _vaultTimer = 0f;
 
@@ -484,7 +486,7 @@ public class PlayerMotor : MonoBehaviour
         wallJumpVelocity.y = velocityToAdd;
         addedVelocity += wallJumpVelocity;
 
-        addedVelocity += wallCollisionCheck.getLastHitNormal() * _wallJumpReboundVelocity;
+        addedVelocity += wallCollisionCheck.GetLastHitNormal() * _wallJumpReboundVelocity;
 
         return addedVelocity;
     }
@@ -527,7 +529,7 @@ public class PlayerMotor : MonoBehaviour
         }
 
         // we might need to cancel the vault if we're no longer touching the ledge
-        // but only do so if we aren't almost all the way through the animation
+        // but only do so if we aren't almost all the way through the animation (this is to ensure we get max height from the vault)
         if (!wallCollisionCheck.CanContinueVaulting() && _vaultTimer / _vaultTime < 0.9)
         {
             frameState.Add(StateController.State.VAULT_CANCEL);
@@ -555,6 +557,16 @@ public class PlayerMotor : MonoBehaviour
 
         // directly assign velocity rather than giving additive pieces
         _playerVelocity.y = y_velocity;
+
+        // we also need to slow down our 'horizontal' velocity so we aren't flying sideways while vaulting
+        Vector3 velInNormalDirection = Vector3.Dot(_playerVelocity, wallCollisionCheck.GetLastHitNormal()) * _playerVelocity;
+        Vector3 horizontalVelocity = _playerVelocity - velInNormalDirection;
+        Vector3 horizontalNorm = horizontalVelocity / horizontalVelocity.magnitude;
+        horizontalNorm.y = 0;
+
+        Vector3 velocityReduction = -1 * _vaultHorizontalDeceleration * Time.deltaTime * horizontalNorm;
+
+        _playerVelocity += velocityReduction;
     }
 
     // ---------------------------Util Methods--------------------------------------------------------------
