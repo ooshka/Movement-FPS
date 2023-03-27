@@ -30,6 +30,10 @@ public class PlayerMotor : MonoBehaviour
     private int _numOfClimbs = 3;
     [SerializeField]
     private float _climbHeight = 0.9f;
+    [SerializeField]
+    [Tooltip("The amount of time after a jump that we can initiate a climb")]
+    private float _climbJumpDelay = 0.05f;
+
 
     [Header("Vaulting")]
     [SerializeField]
@@ -207,6 +211,8 @@ public class PlayerMotor : MonoBehaviour
                 {
                     frameState.Add(StateController.State.JUMPING);
                     addedVelocity += HandleJump(_jumpHeight);
+                    // added so we don't get a jump and climb boost at the same time
+                    timers[CLIMB_COOLDOWN_TIMER].AddTime(_climbJumpDelay);
                 }
 
                 if (!_isCrouched)
@@ -423,7 +429,7 @@ public class PlayerMotor : MonoBehaviour
                             frameState.Add(StateController.State.CLIMBING);
                         }
                         // if our cooldown timer is currently running it means we're climbing
-                        else if (!timers[CLIMB_COOLDOWN_TIMER].CanTriggerEvent())
+                        else if (!timers[CLIMB_COOLDOWN_TIMER].CanTriggerEvent() && _climbCounter < _numOfClimbs)
                         {
                             frameState.Add(StateController.State.CLIMBING);
                         }
