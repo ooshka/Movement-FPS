@@ -412,29 +412,33 @@ public class PlayerMotor : MonoBehaviour
             {
                 // going to try and do a velocity limit check so we aren't raycasting every frame
                 float forwardVelocity = Vector3.Dot(_playerVelocity, cam.transform.forward);
-                if (wallCollisionCheck.CanVault())
+                if (forwardVelocity <= _vaultVelocityCutoff)
                 {
-                    _isVaulting = true;
-                    _isVaultStarting = true;
-                }
-                else
-                {
-                    // we need to handle climb animation and our velocity change
-                    if (wallCollisionCheck.CanClimb())
+                    if (wallCollisionCheck.CanVault())
                     {
-                        if (_climbCounter > 0 && timers[CLIMB_COOLDOWN_TIMER].CanTriggerEventAndReset())
-                        {
-                            addedVelocity += HandleJump(_climbHeight);
-                            _climbCounter--;
-                            frameState.Add(StateController.State.CLIMBING);
-                        }
-                        // if our cooldown timer is currently running it means we're climbing
-                        else if (!timers[CLIMB_COOLDOWN_TIMER].CanTriggerEvent() && _climbCounter < _numOfClimbs)
-                        {
-                            frameState.Add(StateController.State.CLIMBING);
-                        }
+                        Debug.Log("HERE");
+                        _isVaulting = true;
+                        _isVaultStarting = true;
                     }
+                    else
+                    {
+                        // we need to handle climb animation and our velocity change
+                        if (wallCollisionCheck.CanClimb())
+                        {
+                            if (_climbCounter > 0 && timers[CLIMB_COOLDOWN_TIMER].CanTriggerEventAndReset())
+                            {
+                                addedVelocity += HandleJump(_climbHeight);
+                                _climbCounter--;
+                                frameState.Add(StateController.State.CLIMBING);
+                            }
+                            // if our cooldown timer is currently running it means we're climbing
+                            else if (!timers[CLIMB_COOLDOWN_TIMER].CanTriggerEvent() && _climbCounter < _numOfClimbs)
+                            {
+                                frameState.Add(StateController.State.CLIMBING);
+                            }
+                        }
 
+                    }
                 }
             }
 
