@@ -47,6 +47,9 @@ public class PlayerMotor : MonoBehaviour
     private float _vaultVelocityVertical = 2.4f;
     [SerializeField]
     private float _vaultHorizontalDeceleration = 20f;
+    [SerializeField]
+    [Tooltip("The number of vaults we can do before hitting the ground")]
+    private int _numOfVaults = 1;
 
     private float _vaultTimer = 0f;
 
@@ -133,6 +136,7 @@ public class PlayerMotor : MonoBehaviour
     private ControllerColliderHit _lastGroundedHit;
 
     private int _climbCounter;
+    private int _vaultCounter;
 
     private Dictionary<string, Timer> timers = new Dictionary<string, Timer>();
     private readonly string LATE_JUMP_TIMER = "late_jump";
@@ -162,8 +166,9 @@ public class PlayerMotor : MonoBehaviour
         timers.Add(MELEE_COOLDOWN_TIMER, new Timer(_meleeCooldown, false));
         timers.Add(CLIMB_COOLDOWN_TIMER, new Timer(_climbCooldown, false));
 
-        // init our climb counter
+        // init our counters
         _climbCounter = _numOfClimbs;
+        _vaultCounter = _numOfVaults;
     }
 
     // Update is called once per frame
@@ -205,8 +210,9 @@ public class PlayerMotor : MonoBehaviour
                 // we don't want gravity to continually crank up our negative vert velocity up so reset to some small negative value
                 ResetVerticalVelocity();
 
-                // reset our climb counter
+                // reset our climb and vault counters
                 _climbCounter = _numOfClimbs;
+                _vaultCounter = _numOfVaults;
 
                 // we can jump in either crouched or walk/sprint mode
                 if (_isJumping && timers[JUMP_COOLDOWN_TIMER].CanTriggerEvent())
@@ -416,11 +422,11 @@ public class PlayerMotor : MonoBehaviour
                 float forwardVelocity = Vector3.Dot(_playerVelocity, cam.transform.forward);
                 if (forwardVelocity <= _vaultVelocityCutoff)
                 {
-                    if (wallCollisionCheck.CanVault())
+                    if (wallCollisionCheck.CanVault() && _vaultCounter > 0)
                     {
-                        Debug.Log("HERE");
                         _isVaulting = true;
                         _isVaultStarting = true;
+                        _vaultCounter--;
                     }
                     else
                     {
