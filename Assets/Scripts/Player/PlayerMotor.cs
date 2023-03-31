@@ -55,7 +55,7 @@ public class PlayerMotor : MonoBehaviour
 
     [Header("Grounded Movement")]
     [SerializeField]
-    private float _walkSpeed = 5f;
+    private float _walkSpeed = 4f;
     [SerializeField]
     private float _crouchWalkSpeed = 3f;
     [SerializeField]
@@ -63,8 +63,11 @@ public class PlayerMotor : MonoBehaviour
     [SerializeField]
     private float _sprintAccelTime = 0.75f;
     [SerializeField]
+    private float _groundedAccel = 20f;
+    [SerializeField]
     private float _groundCollisionThreshold = 0.2f;
-
+    [SerializeField]
+    private float _frictionDeceleration = 30f;
     private float _sprintStrafeSpeed;
 
 
@@ -285,58 +288,64 @@ public class PlayerMotor : MonoBehaviour
 
     private Vector3 HandleGroundedMovement(Vector3 moveDirection)
     {
-        Vector3 addVelocity = Vector3.zero;
+        Vector3 addedVelocity = Vector3.zero;
 
+        Vector3 globalMoveDirection = transform.TransformDirection(moveDirection);
+
+        float moveVelocityCap;
         if (moveDirection.z > 0 && (int)moveDirection.magnitude == 1)
         {
             _isSprinting = true;
             frameState.Add(StateController.State.SPRINTING);
+            moveVelocityCap = _sprintSpeed;
+
+            if (moveDirection.x != 0)
+            {
+                // a/d strafing while sprinting
+                // we actually don't want to run on a perfect 45° angle so skew move direction accordingly
+                float xComponent = _sprintStrafeSpeed / _sprintSpeed * moveDirection.x/Mathf.Abs(moveDirection.x);
+                float zComponent = Mathf.Sqrt(1 - Mathf.Pow(xComponent, 2));
+                globalMoveDirection = transform.TransformDirection(new Vector3(xComponent, 0, zComponent));
+            }
         }
         else
         {
             _isSprinting = false;
+            moveVelocityCap = _walkSpeed;
         }
 
-        if (_isSprinting)
+        Vector3 horizontalVelocity = new Vector3(_playerVelocity.x, 0, _playerVelocity.z);
+
+        Vector3 frictionDecel = AddVelocityInDirection(horizontalVelocity, -_playerVelocity.normalized, _frictionDeceleration * Time.deltaTime, 0);
+
+        if (moveDirection.magnitude != 0)
         {
-            float horizontalSpeed = new Vector3(_playerVelocity.x, 0, _playerVelocity.z).magnitude;
-            float newSpeed = MotionCurves.LinearInterp(horizontalSpeed, _walkSpeed, _sprintSpeed, _sprintAccelTime);
+            float velInMoveDirection = Vector3.Dot(horizontalVelocity, globalMoveDirection);
 
+            // if we were already above our cap we don't want friction to decelerate us below that
+            float frictionInMoveDirection = Vector3.Dot(frictionDecel, globalMoveDirection);
 
-            float xMoveComponent = moveDirection.x;
-            float zMoveComponent = moveDirection.z;
-
-            if (moveDirection.x != 0)
+            // check to see if the addition of friction will put us below our cap
+            // if our velocity is in the opposite direction as our movement we'll add all friction
+            if (velInMoveDirection > 0 && velInMoveDirection + frictionInMoveDirection < moveVelocityCap)
             {
-                // if we have a/d pressed we don't want a full sprint in the diagonal, 
-                // so skew the unit vector direction based on the max sprint strafe speed
-
-                // end term is just to preserve the sign of the original input
-                xMoveComponent = _sprintStrafeSpeed / _sprintSpeed * xMoveComponent/Mathf.Abs(xMoveComponent);
-
-                // now we need to find the z component that will preserve unit-ness of the vector
-                // no need to preserve sign here cause we can only sprint forward
-                zMoveComponent = Mathf.Sqrt(1 - Mathf.Pow(xMoveComponent, 2));
+                // negate all friction in this direction
+                frictionDecel -= frictionInMoveDirection * globalMoveDirection;
+                
             }
-            addVelocity += transform.TransformDirection(new Vector3(xMoveComponent, 0, zMoveComponent)) * newSpeed;
-        }
-        else
-        {
-            if (moveDirection.magnitude == 0)
+
+            if (_isSprinting)
             {
-                frameState.Add(StateController.State.IDLE);
-            } else
-            {
-                frameState.Add(StateController.State.WALKING);
+                addedVelocity += AddVelocityInDirection(_playerVelocity, globalMoveDirection, _groundedAccel * Time.deltaTime, _sprintSpeed);
             }
-            addVelocity += transform.TransformDirection(moveDirection) * _walkSpeed;
+            else
+            {
+                addedVelocity += AddVelocityInDirection(_playerVelocity, globalMoveDirection, _groundedAccel * Time.deltaTime, _walkSpeed);
+            }
         }
+        addedVelocity += frictionDecel;
 
-        // need to ostensibly "stop" our horizontal velocity because we're only going to be moving exactly as far as this method wants
-        _playerVelocity.x = 0;
-        _playerVelocity.z = 0;
-
-        return addVelocity;
+        return addedVelocity;
     }
 
     private Vector3 HandleCrouchedMovement(Vector3 moveDirection)
@@ -599,8 +608,6 @@ public class PlayerMotor : MonoBehaviour
     private Vector3 AddVelocityInDirection(Vector3 currentVelocity, Vector3 direction, float additionalVelocity, float maxVelocity)
     {
         float velInMoveDirection = Vector3.Dot(direction, currentVelocity) / direction.magnitude;
-
-        velInMoveDirection = Mathf.Max(0, velInMoveDirection);
 
         if (velInMoveDirection + additionalVelocity >= maxVelocity)
         {
