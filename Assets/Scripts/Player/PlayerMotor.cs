@@ -448,8 +448,8 @@ public class PlayerMotor : MonoBehaviour
             if (moveDirection.z > 0)
             {
                 // going to try and do a velocity limit check so we aren't raycasting every frame
-                float forwardVelocity = Vector3.Dot(_playerVelocity, cam.transform.forward);
-                if (forwardVelocity <= _vaultVelocityCutoff)
+                float forwardVelocity = Vector3.Dot(_playerVelocity, transform.forward);
+                if (true)
                 {
                     if (wallCollisionCheck.CanVault() && _vaultCounter > 0)
                     {
