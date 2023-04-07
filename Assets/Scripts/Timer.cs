@@ -53,4 +53,14 @@ public class Timer
         }
         return canTrigger;
     }
+
+    public float GetTime()
+    {
+        return timer;
+    }
+
+    public void SetTime(float time)
+    {
+        timer = time;
+    }
 }

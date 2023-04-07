@@ -44,12 +44,15 @@ public class PlayerMotor : MonoBehaviour
     private float _vaultTime = 1f;
     [SerializeField]
     [Tooltip("Vertical component of vault velocity, will have to be dialed in to make sure we get enough height")]
-    private float _vaultVelocityVertical = 2.4f;
+    private float _vaultVelocityVertical = 2.2f;
     [SerializeField]
     private float _vaultHorizontalDeceleration = 20f;
     [SerializeField]
     [Tooltip("The number of vaults we can do before hitting the ground")]
     private int _numOfVaults = 1;
+    [SerializeField]
+    [Tooltip("The amount of time we have to vault slide boost after a vault")]
+    private float _vaultBootTime = 0.2f;
 
     private float _vaultTimer = 0f;
 
@@ -109,6 +112,8 @@ public class PlayerMotor : MonoBehaviour
     [SerializeField]
     public bool _isCrouched;
     [SerializeField]
+    private bool _wasCrouched = false;
+    [SerializeField]
     private bool _isJumping;
     [SerializeField]
     private bool _isVaulting;
@@ -141,6 +146,7 @@ public class PlayerMotor : MonoBehaviour
 
     private Dictionary<string, Timer> timers = new Dictionary<string, Timer>();
     private readonly string LATE_JUMP_TIMER = "late_jump";
+    private readonly string VAULT_BOOST_TIMER = "vault_boost";
     private readonly string JUMP_COOLDOWN_TIMER = "jump_cooldown";
     private readonly string MELEE_COOLDOWN_TIMER = "melee_cooldown";
     private readonly string CLIMB_COOLDOWN_TIMER = "climb_cooldown";
@@ -163,6 +169,7 @@ public class PlayerMotor : MonoBehaviour
 
         // init all of our timers
         timers.Add(LATE_JUMP_TIMER, new Timer(_lateJumpDelay, true));
+        timers.Add(VAULT_BOOST_TIMER, new Timer(_vaultBootTime, true));
         timers.Add(JUMP_COOLDOWN_TIMER, new Timer(_jumpCooldown, false));
         timers.Add(MELEE_COOLDOWN_TIMER, new Timer(_meleeCooldown, false));
         timers.Add(CLIMB_COOLDOWN_TIMER, new Timer(_climbCooldown, false));
@@ -197,7 +204,12 @@ public class PlayerMotor : MonoBehaviour
         {
             // experimenting with locking in an actual animation for vaulting
             HandleVaulting(moveDirection);
-        } else
+        }
+        else if (timers[VAULT_BOOST_TIMER].CanTriggerEvent() && !_wasCrouched && _isCrouched && moveDirection.z == 1)
+        {
+            addedVelocity += HandleVaultBoost(moveDirection);
+        }
+        else
         {
             // change the controller's height
             HandleCrouchHeightChange();
@@ -273,6 +285,7 @@ public class PlayerMotor : MonoBehaviour
 
         // store whether we were grounded this frame or not
         _wasGrounded = _isGrounded;
+        _wasCrouched = _isCrouched;
 
         // iterate all of our timers
         foreach(Timer timer in timers.Values)
@@ -547,6 +560,7 @@ public class PlayerMotor : MonoBehaviour
         {
             _isVaulting = false;
             _vaultTimer = 0f;
+            timers[VAULT_BOOST_TIMER].Reset();
             return;
         }
 
@@ -590,6 +604,23 @@ public class PlayerMotor : MonoBehaviour
 
         _playerVelocity += velocityReduction;
     }
+
+    private Vector3 HandleVaultBoost(Vector3 moveDirection)
+    {
+        timers[VAULT_BOOST_TIMER].SetTime(0f);
+        Vector3 addedVelocity = Vector3.zero;
+        Debug.Log("Slide Boost");
+        addedVelocity += AddVelocityInDirection(_playerVelocity, cam.transform.forward, _slideBoost * 1.5f, _slidBoostMaxVelocity);
+
+        if (timers[VAULT_BOOST_TIMER].GetTime() <= _vaultBootTime / 4 && _isJumping)
+        {
+            Debug.Log("GLIIIIIDE");
+            addedVelocity += HandleJump(_jumpHeight);
+        }
+
+        return addedVelocity;
+    }
+
 
     // ---------------------------Util Methods--------------------------------------------------------------
 
