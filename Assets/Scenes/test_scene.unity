@@ -757,10 +757,9 @@ MonoBehaviour:
   _walkSpeed: 4
   _crouchWalkSpeed: 3
   _sprintSpeed: 7
-  _sprintAccelTime: 0.75
   _groundedAccel: 20
   _groundCollisionThreshold: 0.2
-  _frictionDeceleration: 30
+  _frictionDeceleration: 40
   _airStrafeAccel: 12
   _slideCutoffVelocity: 1
   _slideFrictionDecel: 10

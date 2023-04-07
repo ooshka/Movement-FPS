@@ -61,13 +61,11 @@ public class PlayerMotor : MonoBehaviour
     [SerializeField]
     private float _sprintSpeed = 7f;
     [SerializeField]
-    private float _sprintAccelTime = 0.75f;
-    [SerializeField]
     private float _groundedAccel = 20f;
     [SerializeField]
     private float _groundCollisionThreshold = 0.2f;
     [SerializeField]
-    private float _frictionDeceleration = 30f;
+    private float _frictionDeceleration = 40f;
     private float _sprintStrafeSpeed;
 
 
@@ -312,6 +310,15 @@ public class PlayerMotor : MonoBehaviour
         {
             _isSprinting = false;
             moveVelocityCap = _walkSpeed;
+
+            if (moveDirection.magnitude == 0)
+            {
+                frameState.Add(StateController.State.IDLE);
+            }
+            else
+            {
+                frameState.Add(StateController.State.WALKING);
+            }
         }
 
         Vector3 horizontalVelocity = new Vector3(_playerVelocity.x, 0, _playerVelocity.z);
