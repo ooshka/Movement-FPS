@@ -29,7 +29,7 @@ public class PlayerMotor : MonoBehaviour
     [SerializeField]
     private int _numOfClimbs = 3;
     [SerializeField]
-    private float _climbHeight = 0.9f;
+    private float _climbHeight = 0.7f;
     [SerializeField]
     [Tooltip("The amount of time after a jump that we can initiate a climb")]
     private float _climbJumpDelay = 0.05f;
