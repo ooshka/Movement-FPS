@@ -908,11 +908,11 @@ MonoBehaviour:
   _wallJumpReboundVelocity: 2
   _climbCooldown: 0.4
   _numOfClimbs: 3
-  _climbHeight: 0.9
+  _climbHeight: 0.7
   _climbJumpDelay: 0.05
   _vaultVelocityCutoff: 2
   _vaultTime: 1
-  _vaultVelocityVertical: 2
+  _vaultVelocityVertical: 2.2
   _vaultHorizontalDeceleration: 20
   _numOfVaults: 1
   _vaultBootTime: 0.2
