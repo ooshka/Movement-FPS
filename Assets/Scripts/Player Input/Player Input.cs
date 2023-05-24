@@ -430,6 +430,45 @@ public partial class @PlayerInput : IInputActionCollection2, IDisposable
                     ""isPartOfComposite"": false
                 }
             ]
+        },
+        {
+            ""name"": ""Utility"",
+            ""id"": ""41fd2094-e4b6-41c5-91bc-227337ea687a"",
+            ""actions"": [
+                {
+                    ""name"": ""Interact"",
+                    ""type"": ""Button"",
+                    ""id"": ""d4f811f9-73a0-4429-a39b-63c6ca57f490"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                }
+            ],
+            ""bindings"": [
+                {
+                    ""name"": """",
+                    ""id"": ""acfcbe2c-412d-48f0-a3bf-c665dcfd65ef"",
+                    ""path"": ""<Keyboard>/e"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Interact"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""5fc15d19-77b6-4543-b231-6dbde0e6bcbf"",
+                    ""path"": ""<Gamepad>/buttonWest"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Interact"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                }
+            ]
         }
     ],
     ""controlSchemes"": []
@@ -452,6 +491,9 @@ public partial class @PlayerInput : IInputActionCollection2, IDisposable
         m_Shooting_Shoot = m_Shooting.FindAction("Shoot", throwIfNotFound: true);
         m_Shooting_Reload = m_Shooting.FindAction("Reload", throwIfNotFound: true);
         m_Shooting_ADS = m_Shooting.FindAction("ADS", throwIfNotFound: true);
+        // Utility
+        m_Utility = asset.FindActionMap("Utility", throwIfNotFound: true);
+        m_Utility_Interact = m_Utility.FindAction("Interact", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -687,6 +729,39 @@ public partial class @PlayerInput : IInputActionCollection2, IDisposable
         }
     }
     public ShootingActions @Shooting => new ShootingActions(this);
+
+    // Utility
+    private readonly InputActionMap m_Utility;
+    private IUtilityActions m_UtilityActionsCallbackInterface;
+    private readonly InputAction m_Utility_Interact;
+    public struct UtilityActions
+    {
+        private @PlayerInput m_Wrapper;
+        public UtilityActions(@PlayerInput wrapper) { m_Wrapper = wrapper; }
+        public InputAction @Interact => m_Wrapper.m_Utility_Interact;
+        public InputActionMap Get() { return m_Wrapper.m_Utility; }
+        public void Enable() { Get().Enable(); }
+        public void Disable() { Get().Disable(); }
+        public bool enabled => Get().enabled;
+        public static implicit operator InputActionMap(UtilityActions set) { return set.Get(); }
+        public void SetCallbacks(IUtilityActions instance)
+        {
+            if (m_Wrapper.m_UtilityActionsCallbackInterface != null)
+            {
+                @Interact.started -= m_Wrapper.m_UtilityActionsCallbackInterface.OnInteract;
+                @Interact.performed -= m_Wrapper.m_UtilityActionsCallbackInterface.OnInteract;
+                @Interact.canceled -= m_Wrapper.m_UtilityActionsCallbackInterface.OnInteract;
+            }
+            m_Wrapper.m_UtilityActionsCallbackInterface = instance;
+            if (instance != null)
+            {
+                @Interact.started += instance.OnInteract;
+                @Interact.performed += instance.OnInteract;
+                @Interact.canceled += instance.OnInteract;
+            }
+        }
+    }
+    public UtilityActions @Utility => new UtilityActions(this);
     public interface IGroundedActions
     {
         void OnMovement(InputAction.CallbackContext context);
@@ -708,5 +783,9 @@ public partial class @PlayerInput : IInputActionCollection2, IDisposable
         void OnShoot(InputAction.CallbackContext context);
         void OnReload(InputAction.CallbackContext context);
         void OnADS(InputAction.CallbackContext context);
+    }
+    public interface IUtilityActions
+    {
+        void OnInteract(InputAction.CallbackContext context);
     }
 }

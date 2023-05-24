@@ -5,37 +5,67 @@ using UnityEngine;
 public class Interactable : MonoBehaviour
 {
     [SerializeField]
-    private float angleCutoff = 30f;
+    private float _angleCutoff = 30f;
+
+    private bool _isInteractable;
+    private Collider _playerCollider;
+    private Camera _cam;
 
     // Start is called before the first frame update
     void Start()
     {
-        
+        InputManager.interactAction += Interact;
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
 
-    private void OnTriggerEnter(Collider collider)
+    private void Interact()
     {
-        if (collider.CompareTag("Player"))
+        if (_isInteractable)
         {
-            Camera cam = collider.gameObject.GetComponentInChildren<Camera>();
 
-            Vector3 camDirection = cam.transform.forward;
+        }
+    }
 
-            Vector3 itemDirection = transform.position - cam.transform.position;
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("Player"))
+        {
+            // store reference to the collider and camera for cheaper calls moving forwards
+            _playerCollider = other;
+            _cam = other.gameObject.GetComponentInChildren<Camera>();
+        }
+    }
+
+    private void OnTriggerStay(Collider other)
+    {
+
+        if (other == _playerCollider)
+        {
+            Vector3 camDirection = _cam.transform.forward;
+
+            Vector3 itemDirection = transform.position - _cam.transform.position;
             itemDirection.Normalize();
 
             float lookAngle = Vector3.Angle(camDirection, itemDirection);
 
-            if (lookAngle < angleCutoff)
+            if (lookAngle < _angleCutoff)
             {
-                Debug.Log("Looking at the thing!!!");
+                _isInteractable = true;
+            } else
+            {
+                _isInteractable = false;
             }
+        }
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        // throw away our references
+        if (other == _playerCollider)
+        {
+            _playerCollider = null;
+            _cam = null;
+            _isInteractable = false;
         }
     }
 }
