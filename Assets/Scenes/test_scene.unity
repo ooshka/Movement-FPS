@@ -317,7 +317,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 92174d2ba7115e0468336887cd38e736, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  angleCutoff: 30
+  _angleCutoff: 30
 --- !u!1 &281220590 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: -6733177361254619370, guid: f2c2df7d019c3214f8c54acab7fef621, type: 3}
@@ -736,6 +736,7 @@ GameObject:
   - component: {fileID: 1371450365}
   - component: {fileID: 1371450364}
   - component: {fileID: 1371450367}
+  - component: {fileID: 1371450368}
   m_Layer: 0
   m_Name: Interactable
   m_TagString: Untagged
@@ -838,6 +839,18 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &1371450368
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1371450361}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b3be404a51ea5ca4ab444bb377b25a43, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!224 &1758520283 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 6155752796044314390, guid: 8e6e4b78cf9397047b6cdf186ba6b57b, type: 3}
@@ -1079,7 +1092,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   cam: {fileID: 1896941129}
-  sensitivity: 26
+  sensitivity: 30
 --- !u!114 &1896941131
 MonoBehaviour:
   m_ObjectHideFlags: 0
