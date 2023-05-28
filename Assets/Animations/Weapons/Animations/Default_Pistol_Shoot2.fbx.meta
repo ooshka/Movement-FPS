@@ -1,14 +1,14 @@
 fileFormatVersion: 2
-guid: 1c6ea0b7835cd8f4b93fce291750edd1
+guid: 95fc042b5bfd10e4e8a6c929bad6b879
 ModelImporter:
   serializedVersion: 21300
   internalIDToNameTable:
   - first:
-      74: -1497476368436209825
-    second: Pistol Rig|Reload
+      74: 2815380003216381475
+    second: Default Pistol (RIG)|Shoot
   externalObjects: {}
   materials:
-    materialImportMode: 0
+    materialImportMode: 2
     materialName: 0
     materialSearch: 1
     materialLocation: 1
@@ -96,7 +96,7 @@ ModelImporter:
     hasTranslationDoF: 0
     hasExtraRoot: 0
     skeletonHasParents: 1
-  lastHumanDescriptionAvatarSource: {fileID: 9000000, guid: b14745d2ff7e4fb40a95f7247a7b8a63, type: 3}
+  lastHumanDescriptionAvatarSource: {fileID: 9000000, guid: 530ee980f5577de44b6390700feb0d12, type: 3}
   autoGenerateAvatarMappingIfUnspecified: 1
   animationType: 2
   humanoidOversampling: 1

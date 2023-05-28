@@ -1,11 +1,11 @@
 fileFormatVersion: 2
-guid: 7d1f6baaaca21cc4597dc918a8c04739
+guid: 641daccd497e24a40bca4064b227a888
 ModelImporter:
   serializedVersion: 21300
   internalIDToNameTable:
   - first:
-      74: 6123655909317411564
-    second: Pistol Rig|Shoot
+      74: -1321041646306177016
+    second: Default Pistol (RIG)|Idle
   externalObjects: {}
   materials:
     materialImportMode: 0
@@ -34,7 +34,36 @@ ModelImporter:
     animationWrapMode: 0
     extraExposedTransformPaths: []
     extraUserProperties: []
-    clipAnimations: []
+    clipAnimations:
+    - serializedVersion: 16
+      name: Default Pistol (RIG)|Idle
+      takeName: Default Pistol (RIG)|Idle
+      internalID: 0
+      firstFrame: 0
+      lastFrame: 24
+      wrapMode: 0
+      orientationOffsetY: 0
+      level: 0
+      cycleOffset: 0
+      loop: 0
+      hasAdditiveReferencePose: 0
+      loopTime: 1
+      loopBlend: 0
+      loopBlendOrientation: 0
+      loopBlendPositionY: 0
+      loopBlendPositionXZ: 0
+      keepOriginalOrientation: 0
+      keepOriginalPositionY: 1
+      keepOriginalPositionXZ: 0
+      heightFromFeet: 0
+      mirror: 0
+      bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
+      curves: []
+      events: []
+      transformMask: []
+      maskType: 3
+      maskSource: {instanceID: 0}
+      additiveReferencePoseFrame: 0
     isReadable: 0
   meshes:
     lODScreenPercentages: []
@@ -96,7 +125,7 @@ ModelImporter:
     hasTranslationDoF: 0
     hasExtraRoot: 0
     skeletonHasParents: 1
-  lastHumanDescriptionAvatarSource: {fileID: 9000000, guid: b14745d2ff7e4fb40a95f7247a7b8a63, type: 3}
+  lastHumanDescriptionAvatarSource: {fileID: 9000000, guid: 530ee980f5577de44b6390700feb0d12, type: 3}
   autoGenerateAvatarMappingIfUnspecified: 1
   animationType: 2
   humanoidOversampling: 1
