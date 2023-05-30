@@ -85,7 +85,7 @@ public abstract class AbstractGun : MonoBehaviour
         if (isAds)
         {
             cam.fieldOfView = MotionCurves.LinearInterp(cam.fieldOfView, defaultFOV, defaultFOV * (1 - data.adsFOVChange / 100), data.adsFOVChangeTime);
-            crosshair.HideCrosshair();
+            //crosshair.HideCrosshair();
         } else
         {
             cam.fieldOfView = MotionCurves.LinearInterp(cam.fieldOfView, defaultFOV * (1 - data.adsFOVChange / 100), defaultFOV, data.adsFOVChangeTime);
