@@ -846,7 +846,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b3be404a51ea5ca4ab444bb377b25a43, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  prefabGun: {fileID: 0}
+  prefabGun: {fileID: 103203962616379751, guid: b94f7fdbbb84cd640a3fbeeb8e1c9004, type: 3}
 --- !u!224 &1758520283 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 6155752796044314390, guid: 8e6e4b78cf9397047b6cdf186ba6b57b, type: 3}
