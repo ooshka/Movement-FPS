@@ -1,14 +1,14 @@
 fileFormatVersion: 2
-guid: 1c33732fe6849864d8bed6d45b5e935d
+guid: 76128b65159385c419b8278a5f9d00e5
 ModelImporter:
   serializedVersion: 21300
   internalIDToNameTable:
   - first:
-      74: -2794752261094425624
-    second: Player Arms (RIG)|Pistol Reload
+      74: 64557807117486191
+    second: Player Arms (RIG)|ADS
   externalObjects: {}
   materials:
-    materialImportMode: 0
+    materialImportMode: 2
     materialName: 0
     materialSearch: 1
     materialLocation: 1

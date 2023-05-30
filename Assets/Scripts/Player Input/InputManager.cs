@@ -34,7 +34,7 @@ public class InputManager : MonoBehaviour
         shootingActions.Shoot.canceled += ctx => shootEndAction?.Invoke();
         shootingActions.Reload.performed += ctx => reloadAction?.Invoke();
         shootingActions.ADS.started += ctx => adsStartAction?.Invoke();
-        //shootingActions.ADS.canceled += ctx => adsEndAction?.Invoke();
+        shootingActions.ADS.canceled += ctx => adsEndAction?.Invoke();
 
         // utility
         utilityActions.Interact.performed += ctx => interactAction?.Invoke();

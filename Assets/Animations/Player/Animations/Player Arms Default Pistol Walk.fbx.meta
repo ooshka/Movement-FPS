@@ -1,14 +1,14 @@
 fileFormatVersion: 2
-guid: 75c2dba35fa568e4e944d3e547ce4f4b
+guid: 92f2f7d43a6093f48a233475d89a7556
 ModelImporter:
   serializedVersion: 21300
   internalIDToNameTable:
   - first:
-      74: -3714731337401008151
-    second: Player Arms (RIG)|Pistol Shoot
+      74: 5391117128554319189
+    second: Player Arms (RIG)|Walk
   externalObjects: {}
   materials:
-    materialImportMode: 0
+    materialImportMode: 2
     materialName: 0
     materialSearch: 1
     materialLocation: 1
