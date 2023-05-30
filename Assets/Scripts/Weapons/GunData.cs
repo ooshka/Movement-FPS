@@ -3,8 +3,20 @@ using UnityEngine;
 [CreateAssetMenu(menuName = "Weapon/Gun")]
 public class GunData : ScriptableObject
 {
+    public enum GunType
+    {
+        PISTOL, SMG, SHOTGUN
+    }
+
+    public enum SLOT
+    {
+        PRIMARY, SECONDARY, POWER
+    }
+
     [Header("Meta Data")]
     public new string name;
+    public GunType type;
+    public SLOT slot;
     [HideInInspector]
     public Collider playerCollider = null;
     [Tooltip("in shots per second")]

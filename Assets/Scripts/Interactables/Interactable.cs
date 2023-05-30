@@ -12,7 +12,7 @@ public class Interactable : MonoBehaviour
     private Collider _playerCollider;
     private Camera _cam;
 
-    private Action _interactAction;
+    private Action<Collider> _interactAction;
 
     // Start is called before the first frame update
     void Start()
@@ -25,7 +25,7 @@ public class Interactable : MonoBehaviour
     {
         if (_isInteractable)
         {
-            _interactAction?.Invoke();
+            _interactAction?.Invoke(_playerCollider);
         }
     }
 
@@ -72,7 +72,7 @@ public class Interactable : MonoBehaviour
         }
     }
 
-    public void Subscribe(Action action)
+    public void Subscribe(Action<Collider> action)
     {
         _interactAction += action;
     }

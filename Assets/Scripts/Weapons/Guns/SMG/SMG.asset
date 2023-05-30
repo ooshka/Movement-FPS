@@ -13,9 +13,13 @@ MonoBehaviour:
   m_Name: SMG
   m_EditorClassIdentifier: 
   name: SMG
+  type: 1
+  slot: 0
   playerCollider: {fileID: 0}
   fireRate: 30
   semiAuto: 0
+  adsFOVChange: 0
+  adsFOVChangeTime: 0
   verticalRecoilVelocity: 15
   verticalRecoilTime: 0
   horizontalRecoilVelocity: 4

@@ -13,6 +13,8 @@ MonoBehaviour:
   m_Name: Pistol
   m_EditorClassIdentifier: 
   name: Pistol
+  type: 0
+  slot: 1
   playerCollider: {fileID: 0}
   fireRate: 5
   semiAuto: 1

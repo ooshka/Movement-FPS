@@ -21,6 +21,7 @@ public class StateController : MonoBehaviour
     private readonly string RELOAD_TRIGGER = "Reload_Trigger";
     private readonly string IS_CLIMBING = "Is_Climbing";
     private readonly string IS_ADS = "Is_ADS";
+    private readonly string GUN_TYPE = "Gun_Type";
 
 
     private readonly float blendTime = 0.5f;
@@ -29,11 +30,11 @@ public class StateController : MonoBehaviour
     private readonly List<State> gunState = new List<State>();
     private readonly List<State> totalState = new List<State>();
 
+
     // Start is called before the first frame update
     void Start()
     {
         animPlayer = GameObject.Find("PLAYER ARMS").GetComponent<Animator>();
-        animGun = GameObject.Find("WeaponHolder").GetComponentInChildren<Animator>();
     }
 
     // Update is called once per frame
@@ -114,5 +115,13 @@ public class StateController : MonoBehaviour
     {
         this.gunState.Clear();
         this.gunState.AddRange(gunState);
+    }
+
+    public void SetActiveGun(AbstractGun weapon)
+    {
+        // in the animator controller we'll have to be smart about which int lines up with which gun as we can't pass in the enum
+        animPlayer.SetInteger(GUN_TYPE, (int) weapon.data.type);
+
+        animGun = weapon.GetComponentInChildren<Animator>();
     }
 }

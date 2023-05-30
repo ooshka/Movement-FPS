@@ -5,6 +5,8 @@ using UnityEngine;
 
 public class WeaponPickup : MonoBehaviour
 {
+    [SerializeField]
+    private AbstractGun prefabGun;
 
     // Start is called before the first frame update
     void Start()
@@ -18,9 +20,10 @@ public class WeaponPickup : MonoBehaviour
         
     }
 
-    private void OnPickup()
+    private void OnPickup(Collider playerCollider)
     {
-        Debug.Log("Weapon Picked Up");
+        AbstractGun gun = Instantiate(prefabGun, prefabGun.transform.position, prefabGun.transform.rotation);
+        playerCollider.GetComponent<PlayerManager>().PickupGun(gun);
         Destroy(gameObject);
     }
 }
