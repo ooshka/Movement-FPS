@@ -14,6 +14,7 @@ public class PlayerManager : MonoBehaviour
     void Start()
     {
         _stateController = GetComponent<StateController>();
+        _stateController.SetActiveGun(_weaponHolder.GetComponentInChildren<AbstractGun>());
     }
 
     // Update is called once per frame
