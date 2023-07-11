@@ -5,6 +5,6 @@ public class DebugFlags
 {
         public static bool IsAlwaysADS()
     {
-        return false;
+        return true;
     }
 }
