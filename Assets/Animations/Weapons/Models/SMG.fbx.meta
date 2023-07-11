@@ -3,7 +3,52 @@ guid: bb24d25933e8fe54a94972318f69768f
 ModelImporter:
   serializedVersion: 21300
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SMG ACCENT
+    second: {fileID: 2100000, guid: 91e96b67eb2b7ae4aa32e199b1691240, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SMG ACCENT TOP
+    second: {fileID: 2100000, guid: 000f04d93591a5747a651d9fdfba0884, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SMG GLOW
+    second: {fileID: 2100000, guid: 5d9385c803252ee4f92caa882242fff0, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SMG MAG
+    second: {fileID: 2100000, guid: b85035f94c285104ab835ea3a3e3fc9b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SMG MAGAZINEHLDR
+    second: {fileID: 2100000, guid: b81180a8f121a074dbcce377f78cce4e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SMG MAIN
+    second: {fileID: 2100000, guid: 3e32e13e0a81f0d4f8046b8dc07d3ad6, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SMG RUBBER
+    second: {fileID: 2100000, guid: 389a171a24fdc494aa3a1f9b6017a56c, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SMG SIGHT
+    second: {fileID: 2100000, guid: db21ba344e3d6dc4da3d200868775e39, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SMG SUPPRESSOR
+    second: {fileID: 2100000, guid: 7e7fb225f7eed2246b8ed24939edc582, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
