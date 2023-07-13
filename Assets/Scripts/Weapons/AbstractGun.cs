@@ -135,13 +135,11 @@ public abstract class AbstractGun : MonoBehaviour
     {
         gunState.Add(StateController.State.RELOADING);
         reloading = true;
-        Debug.Log("Reloading");
 
         yield return new WaitForSeconds(data.reloadTime);
 
         currentAmmo = data.clipSize;
         reloading = false;
-        Debug.Log("Finished Reloading");
     }
 
     private IEnumerator HandleFireRate()
@@ -255,5 +253,23 @@ public abstract class AbstractGun : MonoBehaviour
     {
         gunState.Remove(StateController.State.ADS);
         isAds = false;
+    }
+
+    private void OnDestroy()
+    {
+        // initialize Action listeners
+        if (data.semiAuto)
+        {
+            InputManager.shootStartAction -= Shoot;
+        }
+        else
+        {
+            InputManager.shootStartAction -= SetShooting;
+            InputManager.shootEndAction -= SetNotShooting;
+        }
+
+        InputManager.reloadAction -= Reload;
+        InputManager.adsStartAction -= SetADS;
+        InputManager.adsEndAction -= SetNotADS;
     }
 }
