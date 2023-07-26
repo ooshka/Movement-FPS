@@ -942,12 +942,17 @@ MonoBehaviour:
   _groundCollisionThreshold: 0.2
   _frictionDeceleration: 40
   _airStrafeAccel: 12
+  _superGlideBoost: 10
+  _vaultBoostTimer: 0.5
+  _superGlideTimer: 0.1
   _slideCutoffVelocity: 1
   _slideFrictionDecel: 10
   _slideBoost: 5
-  _slidBoostMaxVelocity: 12
+  _slideBoostMaxVelocity: 12
   _positiveSlopeSlideFactor: 20
   _negativeSlopeSlideFactor: 30
+  _slideBoostAccel: 30
+  _slideBoostTime: 0.25
   _meleeDistance: 2
   _meleeCooldown: 0.5
   _punchBoost: 5
