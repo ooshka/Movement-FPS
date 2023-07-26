@@ -81,14 +81,17 @@ public class PlayerMotor : MonoBehaviour
     [SerializeField]
     private float _slideBoost = 5.0f;
     [SerializeField]
-    private float _slidBoostMaxVelocity = 12f;
+    private float _slideBoostMaxVelocity = 12f;
     [SerializeField]
     [Tooltip("Multiplied by the slope angle and added to the influence of the slope on sliding acceleration")]
     private float _positiveSlopeSlideFactor = 20f;
     [SerializeField]
     [Tooltip("Multiplied by the slope angle and added to the influence of the slope on sliding acceleration")]
     private float _negativeSlopeSlideFactor = 30f;
-
+    [SerializeField]
+    private float _slideBoostAccel = 25f;
+    [SerializeField]
+    private float _slideBoostTime = 0.25f;
     private float _slideStartVelocity;
 
 
@@ -133,7 +136,6 @@ public class PlayerMotor : MonoBehaviour
     private Vector3 _playerVelocity;
 
     private Vector3 _prevPosition;
-    private Vector3 _referenceObjectPosition;
     private ControllerColliderHit _lastGroundedHit;
 
     private int _climbCounter;
@@ -144,8 +146,9 @@ public class PlayerMotor : MonoBehaviour
     private readonly string JUMP_COOLDOWN_TIMER = "jump_cooldown";
     private readonly string MELEE_COOLDOWN_TIMER = "melee_cooldown";
     private readonly string CLIMB_COOLDOWN_TIMER = "climb_cooldown";
+    private readonly string SLIDE_BOOST_TIMER = "slide_boost";
 
-    private List<StateController.State> frameState = new List<StateController.State>();
+    private readonly List<StateController.State> frameState = new();
 
     // Start is called before the first frame update
     void Start()
@@ -166,6 +169,7 @@ public class PlayerMotor : MonoBehaviour
         timers.Add(JUMP_COOLDOWN_TIMER, new Timer(_jumpCooldown, false));
         timers.Add(MELEE_COOLDOWN_TIMER, new Timer(_meleeCooldown, false));
         timers.Add(CLIMB_COOLDOWN_TIMER, new Timer(_climbCooldown, false));
+        timers.Add(SLIDE_BOOST_TIMER, new Timer(_slideBoostTime, true));
 
         // init our counters
         _climbCounter = _numOfClimbs;
@@ -379,12 +383,17 @@ public class PlayerMotor : MonoBehaviour
         {
             frameState.Add(StateController.State.SLIDING);
                     
-            Vector3 velDirection = _playerVelocity / _playerVelocity.magnitude;
-
             // we be boostin
             if (_wasSliding == false)
             {
-                addVelocity += AddVelocityInDirection(_playerVelocity, velDirection, _slideBoost, _slidBoostMaxVelocity);
+                timers[SLIDE_BOOST_TIMER].Reset();
+            }
+
+            Vector3 velDirection = _playerVelocity / _playerVelocity.magnitude;
+
+            if (timers[SLIDE_BOOST_TIMER].CanTriggerEvent())
+            {
+                addVelocity += AddVelocityInDirection(_playerVelocity, velDirection, _slideBoostAccel * Time.deltaTime, _slideBoostMaxVelocity);
             }
 
             // let the slope boost or impede us based on angle
@@ -657,6 +666,12 @@ public class PlayerMotor : MonoBehaviour
         {
             _isSliding = false;
         }
+
+        // zero out our slide boost timer so we don't get any shenanigans from that
+        if (!_isSliding)
+        {
+            timers[SLIDE_BOOST_TIMER].SetTime(0f);
+        }
     }
 
     private void HandleCrouchHeightChange()
@@ -728,7 +743,6 @@ public class PlayerMotor : MonoBehaviour
         // do this by seeing if the y coordinate of the collision matches up with the bottom of the capsule collider
         if (Mathf.Abs(playerCenterY - playerExtentY - hit.point.y) < _groundCollisionThreshold)
         {
-            _referenceObjectPosition = transform.position;
             _lastGroundedHit = hit;
             _secondaryGroundedCheck = true;
         }

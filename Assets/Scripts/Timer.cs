@@ -33,6 +33,11 @@ public class Timer
         timer += time;
     }
 
+    public void SetTime(float time)
+    {
+        timer = time;
+    }
+
     public bool CanTriggerEvent()
     {
         if (eventDuringTimer)
