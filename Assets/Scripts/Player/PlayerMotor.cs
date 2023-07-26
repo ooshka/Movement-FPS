@@ -72,6 +72,12 @@ public class PlayerMotor : MonoBehaviour
     [Header("Airborne Movement")]
     public float _airStrafeAccel = 12f;
     private float _airStrafeMaxVelocity;
+    [SerializeField]
+    private float _superGlideBoost = 10f;
+    [SerializeField]
+    private float _vaultBoostTimer = 0.5f;
+    [SerializeField]
+    private float _superGlideTimer = 0.1f;
 
     [Header("Sliding")]
     [SerializeField]
@@ -147,6 +153,8 @@ public class PlayerMotor : MonoBehaviour
     private readonly string MELEE_COOLDOWN_TIMER = "melee_cooldown";
     private readonly string CLIMB_COOLDOWN_TIMER = "climb_cooldown";
     private readonly string SLIDE_BOOST_TIMER = "slide_boost";
+    private readonly string VAULT_BOOST_TIMER = "vault_boost";
+    private readonly string SUPER_GLIDE_TIMER = "super_glide";
 
     private readonly List<StateController.State> frameState = new();
 
@@ -170,6 +178,8 @@ public class PlayerMotor : MonoBehaviour
         timers.Add(MELEE_COOLDOWN_TIMER, new Timer(_meleeCooldown, false));
         timers.Add(CLIMB_COOLDOWN_TIMER, new Timer(_climbCooldown, false));
         timers.Add(SLIDE_BOOST_TIMER, new Timer(_slideBoostTime, true));
+        timers.Add(VAULT_BOOST_TIMER, new Timer(_vaultBoostTimer, true));
+        timers.Add(SUPER_GLIDE_TIMER, new Timer(_superGlideTimer, true));
 
         // init our counters
         _climbCounter = _numOfClimbs;
@@ -208,6 +218,10 @@ public class PlayerMotor : MonoBehaviour
 
             // need to set our sliding flags regardless of state
             CalcPlayerSliding();
+
+            // handle sliding or supergliding out of a vault if required
+            addedVelocity += HandleVaultBoost();
+            
 
             // possible player states
             if (_isGrounded)
@@ -550,6 +564,30 @@ public class PlayerMotor : MonoBehaviour
         return addedVelocity;
     }
 
+    private Vector3 HandleVaultBoost()
+    {
+        Vector3 addedVelocity = Vector3.zero;
+        
+        // check to see if we're allowed to slide or superglide
+        if (timers[VAULT_BOOST_TIMER].CanTriggerEvent())
+        {
+            if (_isCrouched && _isGrounded)
+            {
+                timers[SUPER_GLIDE_TIMER].Reset();
+                _isSliding = true;
+            }
+        }
+
+        // if we've tripped the superglide timer then boooooost
+        if (timers[SUPER_GLIDE_TIMER].CanTriggerEvent() && _isJumping)
+        {
+            addedVelocity += cam.transform.forward * _superGlideBoost;
+            Debug.Log("BOOSTEd");
+        }
+
+        return addedVelocity;
+    }
+
     private void HandleVaulting(Vector3 moveDirection)
     {
         if (_vaultTimer >= _vaultTime)
@@ -566,6 +604,8 @@ public class PlayerMotor : MonoBehaviour
             frameState.Add(StateController.State.VAULT_CANCEL);
             _isVaulting = false;
             _vaultTimer = 0f;
+            // start our superglide timer
+            timers[VAULT_BOOST_TIMER].Reset();
             return;
         }
 
