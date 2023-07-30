@@ -366,7 +366,16 @@ public class PlayerMotor : MonoBehaviour
             {
                 addedVelocity += AddVelocityInDirection(_playerVelocity, globalMoveDirection, _groundedAccel * Time.deltaTime, _walkSpeed);
             }
+        } else
+        {
+            // we had an issue where if you were moving very slowly friction would still just barely apply causing you to glide ever so slowly
+            // this kills that glide
+            if (horizontalVelocity.magnitude < 0.1)
+            {
+                addedVelocity = - horizontalVelocity - frictionDecel;
+            }
         }
+
         addedVelocity += frictionDecel;
 
         return addedVelocity;
