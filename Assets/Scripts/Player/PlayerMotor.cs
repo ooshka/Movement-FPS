@@ -590,7 +590,6 @@ public class PlayerMotor : MonoBehaviour
         if (timers[SUPER_GLIDE_TIMER].CanTriggerEvent() && _isJumping)
         {
             addedVelocity += cam.transform.forward * _superGlideBoost;
-            Debug.Log("BOOSTEd " + Time.deltaTime);
         }
 
         return addedVelocity;
