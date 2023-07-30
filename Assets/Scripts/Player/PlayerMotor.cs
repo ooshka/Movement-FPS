@@ -70,7 +70,7 @@ public class PlayerMotor : MonoBehaviour
 
 
     [Header("Airborne Movement")]
-    public float _airStrafeAccel = 12f;
+    public float _airStrafeAccel = 14f;
     private float _airStrafeMaxVelocity;
     [SerializeField]
     private float _superGlideBoost = 6f;
