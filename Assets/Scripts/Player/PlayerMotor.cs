@@ -73,8 +73,9 @@ public class PlayerMotor : MonoBehaviour
     public float _airStrafeAccel = 12f;
     private float _airStrafeMaxVelocity;
     [SerializeField]
-    private float _superGlideBoost = 10f;
+    private float _superGlideBoost = 6f;
     [SerializeField]
+    [Tooltip("This is the amount of time we have to fulfill either a slide or superglide after vaulting (both are initiated by hitting the ground)")]
     private float _vaultBoostTimer = 0.5f;
     [SerializeField]
     private float _superGlideTimer = 0.1f;
@@ -84,8 +85,6 @@ public class PlayerMotor : MonoBehaviour
     private float _slideCutoffVelocity = 1f;
     [SerializeField]
     private float _slideFrictionDecel = 10f;
-    [SerializeField]
-    private float _slideBoost = 5.0f;
     [SerializeField]
     private float _slideBoostMaxVelocity = 12f;
     [SerializeField]
@@ -582,7 +581,7 @@ public class PlayerMotor : MonoBehaviour
         if (timers[SUPER_GLIDE_TIMER].CanTriggerEvent() && _isJumping)
         {
             addedVelocity += cam.transform.forward * _superGlideBoost;
-            Debug.Log("BOOSTEd");
+            Debug.Log("BOOSTEd " + Time.deltaTime);
         }
 
         return addedVelocity;
