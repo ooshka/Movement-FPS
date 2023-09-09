@@ -20,6 +20,11 @@ public abstract class AbstractBullet : MonoBehaviour
     {
         Vector3 hitLocation = collision.GetContact(0).point;
 
+        if (collision.gameObject.TryGetComponent(out IDamageable hit))
+        {
+            hit.Damage(data.damage);
+        }
+
         GameObject impact = Instantiate(impactObject, hitLocation, Quaternion.identity);
 
         Destroy(impact, 3f);
