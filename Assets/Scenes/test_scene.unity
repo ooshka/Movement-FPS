@@ -1511,6 +1511,30 @@ Transform:
   m_Father: {fileID: 543270829}
   m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &2047906104 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: f2c2df7d019c3214f8c54acab7fef621, type: 3}
+  m_PrefabInstance: {fileID: 1892188932}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &2047906105
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2047906104}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 510b4544c6e1c784db046f4ca9e18bcb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  enemyPrefab: {fileID: 3643836687948332664, guid: 02993488aae20e0478a5ed7d19dbe088, type: 3}
+  enemyStartingPosition: {x: 0, y: 0, z: 0}
+  enemyRotation: {x: 0, y: 0, z: 0, w: 0}
+  numEnemies: 3
+  spacing: 1
+  lineDirection: {x: 1, y: 0, z: 0}
+  moveSpeed: 2
 --- !u!1 &2119320159 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: -5568371526223589888, guid: f2c2df7d019c3214f8c54acab7fef621, type: 3}
