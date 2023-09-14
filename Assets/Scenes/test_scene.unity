@@ -953,6 +953,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Player
       objectReference: {fileID: 0}
+    - target: {fileID: 3347073899100430985, guid: d93057f3985ce8a43a75c45d4b0fada2, type: 3}
+      propertyPath: m_Layer
+      value: 7
+      objectReference: {fileID: 0}
     - target: {fileID: 5271964215998822983, guid: d93057f3985ce8a43a75c45d4b0fada2, type: 3}
       propertyPath: m_Enabled
       value: 0
