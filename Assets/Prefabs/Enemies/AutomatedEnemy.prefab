@@ -114,3 +114,4 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   uiPrefab: {fileID: 9222602149113133173, guid: 137893fcb68546c4a9eea2df9ce64c9c, type: 3}
+  data: {fileID: 11400000, guid: 0ccd2f0281fb4a54ca14b437a3d988ca, type: 2}

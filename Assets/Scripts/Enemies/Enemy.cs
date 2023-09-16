@@ -7,8 +7,7 @@ public class Enemy : MonoBehaviour, IDamageable
 {
     [SerializeField]
     private EnemyUI uiPrefab;
-    [SerializeField]
-    private EnemyData data;
+
     private EnemyUI uiInstance;
     private Canvas canvas;
 
@@ -20,9 +19,14 @@ public class Enemy : MonoBehaviour, IDamageable
 
     private int playerLayerMask;
 
+    [SerializeField]
+    protected EnemyData data;
+
     // Start is called before the first frame update
-    void Start()
+    protected virtual void Start()
     {
+        Debug.Log("Data: " + data);
+
         // get the "Player" layer
         int layer = LayerMask.NameToLayer("Player");
         playerLayerMask = 1 << layer;
@@ -37,7 +41,7 @@ public class Enemy : MonoBehaviour, IDamageable
     }
 
     // Update is called once per frame
-    void Update()
+    protected virtual void Update()
     {
         isInAttackRange = Physics.CheckSphere(transform.position, data.attackSphereRadius, playerLayerMask);
         if (isInAttackRange)
@@ -56,17 +60,17 @@ public class Enemy : MonoBehaviour, IDamageable
         }
     }
 
-    private void Attack()
+    protected virtual void Attack()
     {
         // TODO: make abstract
     }
 
-    private void Chase()
+    protected virtual void Chase()
     {
         // TODO: make abstract and make sure we handle stationary enemies
     }
 
-    private void Patrol()
+    protected virtual void Patrol()
     {
         // TODO: make abstract and make sure we handle stationary enemies
     }
