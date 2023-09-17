@@ -171,4 +171,9 @@ public class OrbEnemy : Enemy
             return false;
         }
     }
+
+    private void Shoot()
+    {
+
+    }
 }

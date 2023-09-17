@@ -103,9 +103,7 @@ public abstract class AbstractGun : MonoBehaviour
             gunState.Add(StateController.State.SHOOTING);
             // TODO: we may want to recycle bullets rather than instantiate
             AbstractBullet bullet = Instantiate(this.bullet, muzzle.position, Quaternion.identity);
-            bullet.transform.forward = CalcShotDirection();
-
-            bullet.GetComponent<Rigidbody>().AddForce(data.bulletSpeed * bullet.transform.forward, ForceMode.VelocityChange);
+            bullet.Fire(CalcShotDirection());
 
             if (data.bulletsPerShot > 1)
             {

@@ -16,6 +16,12 @@ public abstract class AbstractBullet : MonoBehaviour
         Destroy(gameObject, ttl);
     }
 
+    public void Fire(Vector3 direction)
+    {
+        transform.forward = direction;
+        GetComponent<Rigidbody>().AddForce(data.bulletSpeed * transform.forward, ForceMode.VelocityChange);
+    }
+
     private void OnCollisionEnter(Collision collision)
     {
         Vector3 hitLocation = collision.GetContact(0).point;
