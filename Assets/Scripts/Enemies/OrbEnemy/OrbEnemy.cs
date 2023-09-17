@@ -15,13 +15,15 @@ public class OrbEnemy : Enemy
     private float minHorizontalAngle = 0f;
     private float maxHorizontalAngle = 360f;
 
-    private float chargeAttackAngleThreshold = 10f;
+    private float chargeAttackAngleThreshold = 15f;
 
     private float currentVerticalAngle, currentHorizontalAngle;
     private float targetVerticalAngle, targetHorizontalAngle;
 
     private bool isPatrolling = false;
     private bool isChargingAttack = false;
+
+    int rayCastLayerMask;
 
     private new Renderer renderer;
     private LineRenderer lineRenderer;
@@ -31,6 +33,8 @@ public class OrbEnemy : Enemy
     protected override void Start()
     {
         base.Start();
+
+        rayCastLayerMask = Physics.AllLayers & ~(1 << LayerMask.NameToLayer("Enemies"));
 
         renderer = GetComponent<Renderer>();
         lineRenderer = gameObject.AddComponent<LineRenderer>();
@@ -55,6 +59,14 @@ public class OrbEnemy : Enemy
 
         if (isChargingAttack && lineRenderer.enabled)
         {
+            if (!HasLineOfSight())
+            {
+                // if we've broken LOS cancel the charge and give a small cooldown
+                lineRenderer.enabled = false;
+                isChargingAttack = false;
+                chargeCooldownTimer.SetTime(1f);
+            }
+
             lineRenderer.SetPosition(0, transform.position);
             lineRenderer.SetPosition(1, playerTransform.position);
         }
@@ -86,46 +98,52 @@ public class OrbEnemy : Enemy
 
     protected override void Attack()
     {
-        // only need to do this stuff on state change
-        if (isPatrolling)
+        if (HasLineOfSight())
         {
-            rotationSpeed = 4f;
-            renderer.material.color = Color.red;
-            isPatrolling = false;
-        }
+            // only need to do this stuff on state change
+            if (isPatrolling)
+            {
+                rotationSpeed = 8f;
+                renderer.material.color = Color.red;
+                isPatrolling = false;
+            }
 
-        // Get the direction vector from the enemy to the player
-        Vector3 directionToPlayer = playerTransform.position - transform.position;
+            // Get the direction vector from the enemy to the player
+            Vector3 directionToPlayer = playerTransform.position - transform.position;
 
-        // Calculate the horizontal and vertical angles
-        float horizontalAngle = Mathf.Atan2(directionToPlayer.x, directionToPlayer.z) * Mathf.Rad2Deg;
-        float verticalAngle = Mathf.Atan2(directionToPlayer.y, new Vector3(directionToPlayer.x, 0, directionToPlayer.z).magnitude) * Mathf.Rad2Deg;
+            // Calculate the horizontal and vertical angles
+            float horizontalAngle = Mathf.Atan2(directionToPlayer.x, directionToPlayer.z) * Mathf.Rad2Deg;
+            float verticalAngle = Mathf.Atan2(directionToPlayer.y, new Vector3(directionToPlayer.x, 0, directionToPlayer.z).magnitude) * Mathf.Rad2Deg;
 
-        // Set the target angles
-        targetHorizontalAngle = horizontalAngle;
-        targetVerticalAngle = -verticalAngle; // The angle might need to be negated depending on your setup
+            // Set the target angles
+            targetHorizontalAngle = horizontalAngle;
+            targetVerticalAngle = -verticalAngle; // The angle might need to be negated depending on your setup
 
-        float targetAngle = Vector3.Angle(transform.forward, directionToPlayer.normalized);
-        if (targetAngle <= chargeAttackAngleThreshold && !isChargingAttack && chargeCooldownTimer.CanTriggerEvent())
-        {
-            StartCoroutine(ChargeAttack());
-            isChargingAttack = true;
+            float targetAngle = Vector3.Angle(transform.forward, directionToPlayer.normalized);
+            if (targetAngle <= chargeAttackAngleThreshold && !isChargingAttack && chargeCooldownTimer.CanTriggerEvent())
+            {
+                isChargingAttack = true;
+                StartCoroutine(ChargeAttack());
+            }
         }
     }
 
     IEnumerator ChargeAttack()
     {
         // technically in hertz
-        float laserFrequency = 0.75f;
-        while (laserFrequency <= 100)
+        float laserFrequency = 1.5f;
+        while (laserFrequency <= 100 && isChargingAttack)
         {
             StartCoroutine(ShowLaser(1 / laserFrequency));
             yield return new WaitForSeconds(1 / laserFrequency);
             laserFrequency *= 1.5f;
         }
-        Debug.Log("Attack");
-        isChargingAttack = false;
-        chargeCooldownTimer.Reset();
+        if (isChargingAttack)
+        {
+            Debug.Log("Attack");
+            isChargingAttack = false;
+            chargeCooldownTimer.Reset();
+        }
     }
 
     IEnumerator ShowLaser(float laserDuration)
@@ -134,5 +152,23 @@ public class OrbEnemy : Enemy
         yield return new WaitForSeconds(laserDuration * 0.9f);
 
         lineRenderer.enabled = false;
+    }
+
+    private bool HasLineOfSight()
+    {
+        RaycastHit hit;
+        if (Physics.Raycast(transform.position, playerTransform.position - transform.position, out hit, 200f, rayCastLayerMask, QueryTriggerInteraction.Ignore))
+        {
+            if (hit.transform.gameObject.layer == LayerMask.NameToLayer("Terrain"))
+            {
+                return false;
+            } else
+            {
+                return true;
+            }
+        } else
+        {
+            return false;
+        }
     }
 }

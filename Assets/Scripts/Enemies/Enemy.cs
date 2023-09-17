@@ -25,7 +25,6 @@ public class Enemy : MonoBehaviour, IDamageable
     // Start is called before the first frame update
     protected virtual void Start()
     {
-        Debug.Log("Data: " + data);
 
         // get the "Player" layer
         int layer = LayerMask.NameToLayer("Player");

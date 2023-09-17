@@ -146,9 +146,9 @@ public abstract class AbstractGun : MonoBehaviour
     {
         isWithinFireRate = false;
 
-        float fireFrequency = 1f / data.fireRate;
+        float timeBetweenShots = 1f / data.fireRate;
 
-        yield return new WaitForSeconds(fireFrequency);
+        yield return new WaitForSeconds(timeBetweenShots);
 
         isWithinFireRate = true;
     }
