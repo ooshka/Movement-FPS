@@ -5,8 +5,9 @@ using UnityEngine;
 public class OrbEnemy : Enemy
 {
     [SerializeField]
+    Material laserMaterial;
+
     private float changeAngleTime = 2f;
-    [SerializeField]
     private float rotationSpeed = 1f;
     private float minVerticalAngle = 15f;
     private float maxVerticalAngle = 50f;
@@ -14,18 +15,29 @@ public class OrbEnemy : Enemy
     private float minHorizontalAngle = 0f;
     private float maxHorizontalAngle = 360f;
 
+    private float chargeAttackAngleThreshold = 10f;
+
     private float currentVerticalAngle, currentHorizontalAngle;
     private float targetVerticalAngle, targetHorizontalAngle;
 
-    private bool patrolling = false;
+    private bool isPatrolling = false;
+    private bool isChargingAttack = false;
 
     private new Renderer renderer;
+    private LineRenderer lineRenderer;
+
+    private Timer chargeCooldownTimer = new (2f, false);
 
     protected override void Start()
     {
         base.Start();
 
         renderer = GetComponent<Renderer>();
+        lineRenderer = gameObject.AddComponent<LineRenderer>();
+        lineRenderer.material = laserMaterial;
+        lineRenderer.widthMultiplier = 0.01f;
+        lineRenderer.positionCount = 2;
+        lineRenderer.enabled = false;
     }
 
     protected override void Update()
@@ -41,16 +53,22 @@ public class OrbEnemy : Enemy
         // Apply the rotation
         transform.eulerAngles = new Vector3(currentVerticalAngle, currentHorizontalAngle, transform.eulerAngles.z);
 
-        Debug.DrawRay(transform.position, transform.forward, Color.cyan);
+        if (isChargingAttack && lineRenderer.enabled)
+        {
+            lineRenderer.SetPosition(0, transform.position);
+            lineRenderer.SetPosition(1, playerTransform.position);
+        }
+
+        chargeCooldownTimer.Iterate(Time.deltaTime);
     }
 
 
     protected override void Patrol()
     {
-        if (!patrolling)
+        if (!isPatrolling && !isChargingAttack)
         {
-            patrolling = true;
-            Debug.Log("Start patrolling");
+            rotationSpeed = 1f;
+            isPatrolling = true;
             StartCoroutine(ChangeTargetAngle());
             renderer.material.color = Color.blue;
         }
@@ -58,7 +76,7 @@ public class OrbEnemy : Enemy
 
     IEnumerator ChangeTargetAngle()
     {
-        while (patrolling)
+        while (isPatrolling)
         {
             targetVerticalAngle = Random.Range(minVerticalAngle, maxVerticalAngle);
             targetHorizontalAngle = Random.Range(minHorizontalAngle, maxHorizontalAngle);
@@ -68,7 +86,53 @@ public class OrbEnemy : Enemy
 
     protected override void Attack()
     {
-        renderer.material.color = Color.red;
-        patrolling = false;
+        // only need to do this stuff on state change
+        if (isPatrolling)
+        {
+            rotationSpeed = 4f;
+            renderer.material.color = Color.red;
+            isPatrolling = false;
+        }
+
+        // Get the direction vector from the enemy to the player
+        Vector3 directionToPlayer = playerTransform.position - transform.position;
+
+        // Calculate the horizontal and vertical angles
+        float horizontalAngle = Mathf.Atan2(directionToPlayer.x, directionToPlayer.z) * Mathf.Rad2Deg;
+        float verticalAngle = Mathf.Atan2(directionToPlayer.y, new Vector3(directionToPlayer.x, 0, directionToPlayer.z).magnitude) * Mathf.Rad2Deg;
+
+        // Set the target angles
+        targetHorizontalAngle = horizontalAngle;
+        targetVerticalAngle = -verticalAngle; // The angle might need to be negated depending on your setup
+
+        float targetAngle = Vector3.Angle(transform.forward, directionToPlayer.normalized);
+        if (targetAngle <= chargeAttackAngleThreshold && !isChargingAttack && chargeCooldownTimer.CanTriggerEvent())
+        {
+            StartCoroutine(ChargeAttack());
+            isChargingAttack = true;
+        }
+    }
+
+    IEnumerator ChargeAttack()
+    {
+        // technically in hertz
+        float laserFrequency = 0.75f;
+        while (laserFrequency <= 100)
+        {
+            StartCoroutine(ShowLaser(1 / laserFrequency));
+            yield return new WaitForSeconds(1 / laserFrequency);
+            laserFrequency *= 1.5f;
+        }
+        Debug.Log("Attack");
+        isChargingAttack = false;
+        chargeCooldownTimer.Reset();
+    }
+
+    IEnumerator ShowLaser(float laserDuration)
+    {
+        lineRenderer.enabled = true;
+        yield return new WaitForSeconds(laserDuration * 0.9f);
+
+        lineRenderer.enabled = false;
     }
 }

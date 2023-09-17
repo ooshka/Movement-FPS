@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 23563c9f8fdcfa042a20c0f7b6a740ec, type: 3}
   m_Name: OrbEnemyData
   m_EditorClassIdentifier: 
-  detectionSphereRadius: 10
-  attackSphereRadius: 10
+  detectionSphereRadius: 15
+  attackSphereRadius: 15
   isStationary: 1

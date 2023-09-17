@@ -12,7 +12,6 @@ public class Enemy : MonoBehaviour, IDamageable
     private Canvas canvas;
 
     private Healthbar healthbar;
-    private Transform playerTransform;
 
     private bool isInChaseRange = false;
     private bool isInAttackRange = false;
@@ -21,6 +20,7 @@ public class Enemy : MonoBehaviour, IDamageable
 
     [SerializeField]
     protected EnemyData data;
+    protected Transform playerTransform;
 
     // Start is called before the first frame update
     protected virtual void Start()
