@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 23150a1a538bfc2418c93a01de984f3a, type: 3}
-  m_Name: GenericBullet
+  m_Name: OrbEnemyBulletData
   m_EditorClassIdentifier: 
-  parent: 0
-  baseDamage: 20
+  parent: 1
+  baseDamage: 10
   bulletSpeed: 200
   maxDistance: 500

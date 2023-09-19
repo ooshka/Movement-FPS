@@ -558,6 +558,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fd6124502a881be42852569c35b5a0de, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!4 &751593425 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 7866783354317566876, guid: 479774f9f8c0f7449af68cfc2a5d73fd, type: 3}
+  m_PrefabInstance: {fileID: 7806637702838638847}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &881781119 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: -7640558969779515294, guid: f2c2df7d019c3214f8c54acab7fef621, type: 3}
@@ -1031,7 +1036,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7699195966623352321, guid: d93057f3985ce8a43a75c45d4b0fada2, type: 3}
       propertyPath: m_CullingMask.m_Bits
-      value: 119
+      value: 503
       objectReference: {fileID: 0}
     - target: {fileID: 7699195966623352323, guid: d93057f3985ce8a43a75c45d4b0fada2, type: 3}
       propertyPath: m_Name
@@ -1932,5 +1937,9 @@ PrefabInstance:
       propertyPath: data
       value: 
       objectReference: {fileID: 11400000, guid: 0ccd2f0281fb4a54ca14b437a3d988ca, type: 2}
+    - target: {fileID: 4953670297940297899, guid: 479774f9f8c0f7449af68cfc2a5d73fd, type: 3}
+      propertyPath: muzzleTransform
+      value: 
+      objectReference: {fileID: 751593425}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 479774f9f8c0f7449af68cfc2a5d73fd, type: 3}
