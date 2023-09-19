@@ -120,7 +120,7 @@ public class StateController : MonoBehaviour
     public void SetActiveGun(AbstractGun weapon)
     {
         // in the animator controller we'll have to be smart about which int lines up with which gun as we can't pass in the enum
-        animPlayer.SetInteger(GUN_TYPE, (int) weapon.data.type);
+        animPlayer.SetInteger(GUN_TYPE, (int) weapon.gunData.type);
 
         animGun = weapon.GetComponentInChildren<Animator>();
     }

@@ -5,12 +5,19 @@ using UnityEngine;
 public abstract class AbstractBullet : MonoBehaviour
 {
     public GameObject impactObject;
-    public GunData data;
+    public BulletData data;
 
+    private int ignoreLayer;
     private void Start()
     {
-        // ignore collisions with player
-        Physics.IgnoreCollision(GetComponent<Collider>(), data.playerCollider);
+        // we need to ignore the collider of the shooter
+        if (data.parent == BulletData.Parent.PLAYER)
+        {
+            ignoreLayer = LayerMask.NameToLayer("Player");
+        } else
+        {
+            ignoreLayer = LayerMask.NameToLayer("Enemies");
+        }
 
         float ttl = data.maxDistance / data.bulletSpeed;
         Destroy(gameObject, ttl);
@@ -24,16 +31,19 @@ public abstract class AbstractBullet : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
-        Vector3 hitLocation = collision.GetContact(0).point;
-
-        if (collision.gameObject.TryGetComponent(out IDamageable hit))
+        if (collision.collider.gameObject.layer != ignoreLayer)
         {
-            hit.Damage(data.damage);
+            Vector3 hitLocation = collision.GetContact(0).point;
+
+            if (collision.gameObject.TryGetComponent(out IDamageable hit))
+            {
+                hit.Damage(data.baseDamage);
+            }
+
+            GameObject impact = Instantiate(impactObject, hitLocation, Quaternion.identity);
+
+            Destroy(impact, 3f);
+            Destroy(gameObject);
         }
-
-        GameObject impact = Instantiate(impactObject, hitLocation, Quaternion.identity);
-
-        Destroy(impact, 3f);
-        Destroy(gameObject);
     }
 }

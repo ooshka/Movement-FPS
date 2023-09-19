@@ -9,7 +9,11 @@ public abstract class AbstractGun : MonoBehaviour
     private StateController stateController;
     private Crosshair crosshair;
     public Transform muzzle;
-    public GunData data;
+    [SerializeField]
+    public GunData gunData;
+    [SerializeField]
+    private BulletData bulletData;
+
     public AbstractBullet bullet;
 
     private float currentAmmo;
@@ -37,12 +41,12 @@ public abstract class AbstractGun : MonoBehaviour
         GameObject player = GameObject.Find("Player");
         playerLook = player.GetComponent<PlayerLook>();
         stateController = player.GetComponent<StateController>();
-        data.playerCollider = player.GetComponent<Collider>();
+        gunData.playerCollider = player.GetComponent<Collider>();
 
         crosshair = GameObject.Find("HUD_Canvas").GetComponent<Crosshair>();
 
         // initialize Action listeners
-        if (data.semiAuto)
+        if (gunData.semiAuto)
         {
             InputManager.shootStartAction += Shoot;
         } else
@@ -55,14 +59,14 @@ public abstract class AbstractGun : MonoBehaviour
         InputManager.adsStartAction += SetADS;
         InputManager.adsEndAction += SetNotADS;
 
-        currentAmmo = data.clipSize;
-        settlingPositionTimer = new Timer(data.settlingPositionCooldown, false);
+        currentAmmo = gunData.clipSize;
+        settlingPositionTimer = new Timer(gunData.settlingPositionCooldown, false);
     }
 
     private void Update()
     {
         // need to check and see if we're shooting
-        if (!data.semiAuto && isShooting)
+        if (!gunData.semiAuto && isShooting)
         {
             Shoot();
         }
@@ -84,14 +88,14 @@ public abstract class AbstractGun : MonoBehaviour
     {
         if (isAds)
         {
-            cam.fieldOfView = MotionCurves.LinearInterp(cam.fieldOfView, defaultFOV, defaultFOV * (1 - data.adsFOVChange / 100), data.adsFOVChangeTime);
+            cam.fieldOfView = MotionCurves.LinearInterp(cam.fieldOfView, defaultFOV, defaultFOV * (1 - gunData.adsFOVChange / 100), gunData.adsFOVChangeTime);
             if (!DebugFlags.IsAlwaysADS())
             {
                 crosshair.HideCrosshair();
             }
         } else
         {
-            cam.fieldOfView = MotionCurves.LinearInterp(cam.fieldOfView, defaultFOV * (1 - data.adsFOVChange / 100), defaultFOV, data.adsFOVChangeTime);
+            cam.fieldOfView = MotionCurves.LinearInterp(cam.fieldOfView, defaultFOV * (1 - gunData.adsFOVChange / 100), defaultFOV, gunData.adsFOVChangeTime);
             crosshair.ShowCrosshair();
         }
     }
@@ -105,14 +109,14 @@ public abstract class AbstractGun : MonoBehaviour
             AbstractBullet bullet = Instantiate(this.bullet, muzzle.position, Quaternion.identity);
             bullet.Fire(CalcShotDirection());
 
-            if (data.bulletsPerShot > 1)
+            if (gunData.bulletsPerShot > 1)
             {
                 // TODO: handle multiple bullet guns like shotguns
             }
 
             currentAmmo--;
 
-            if (data.verticalRecoilVelocity > 0)
+            if (gunData.verticalRecoilVelocity > 0)
             {
                 SetRecoil();
 
@@ -134,9 +138,9 @@ public abstract class AbstractGun : MonoBehaviour
         gunState.Add(StateController.State.RELOADING);
         reloading = true;
 
-        yield return new WaitForSeconds(data.reloadTime);
+        yield return new WaitForSeconds(gunData.reloadTime);
 
-        currentAmmo = data.clipSize;
+        currentAmmo = gunData.clipSize;
         reloading = false;
     }
 
@@ -144,7 +148,7 @@ public abstract class AbstractGun : MonoBehaviour
     {
         isWithinFireRate = false;
 
-        float timeBetweenShots = 1f / data.fireRate;
+        float timeBetweenShots = 1f / gunData.fireRate;
 
         yield return new WaitForSeconds(timeBetweenShots);
 
@@ -157,12 +161,12 @@ public abstract class AbstractGun : MonoBehaviour
         RaycastHit hit;
 
         Vector3 targetPoint;
-        if (Physics.Raycast(ray, out hit, data.maxDistance)) {
+        if (Physics.Raycast(ray, out hit, bulletData.maxDistance)) {
             targetPoint = hit.point;
         } else
         {
             // if we didn't hit anything aim at max distance point
-            targetPoint = ray.GetPoint(data.maxDistance);
+            targetPoint = ray.GetPoint(bulletData.maxDistance);
         }
 
         Vector3 bulletDirection = (targetPoint - muzzle.position).normalized;
@@ -172,11 +176,11 @@ public abstract class AbstractGun : MonoBehaviour
     private void SetRecoil()
     {
         // add some time to our vertical recoil timer so we can kick a bit
-        recoilTimer.AddTime(1 / data.fireRate);
+        recoilTimer.AddTime(1 / gunData.fireRate);
         // we should recover from this recoil
         shouldResetRecoil = true;
 
-        if (data.horizontalRecoilVelocity > 0)
+        if (gunData.horizontalRecoilVelocity > 0)
         {
             // horizontal recoil direction is stored as a signed counter
             if (Random.value > 0.5f)
@@ -205,13 +209,13 @@ public abstract class AbstractGun : MonoBehaviour
         if (recoilTimer.CanTriggerEvent())
         {
             // we have time left so we are still recoiling
-            playerLook.VerticalLook(data.verticalRecoilVelocity * Time.deltaTime);
+            playerLook.VerticalLook(gunData.verticalRecoilVelocity * Time.deltaTime);
 
             // horizontal recoil
-            if (data.horizontalRecoilVelocity > 0)
+            if (gunData.horizontalRecoilVelocity > 0)
             {
                 int recoilDir = horizontalRecoilDirection == 0 ? horizontalRecoilDirection : horizontalRecoilDirection / Mathf.Abs(horizontalRecoilDirection);
-                playerLook.HorizontalLook(recoilDir * data.horizontalRecoilVelocity * Time.deltaTime);
+                playerLook.HorizontalLook(recoilDir * gunData.horizontalRecoilVelocity * Time.deltaTime);
             }
         } else
         {
@@ -222,7 +226,7 @@ public abstract class AbstractGun : MonoBehaviour
             if (shouldResetRecoil && cam.transform.forward.y > settlingAngle)
             {
                 // if we're aiming above our reset position and we need to reset
-                playerLook.VerticalLook(-data.settlingVelocity * Time.deltaTime);
+                playerLook.VerticalLook(-gunData.settlingVelocity * Time.deltaTime);
             } else
             {
                 // if we've already recovered to our settling position set flag
@@ -256,7 +260,7 @@ public abstract class AbstractGun : MonoBehaviour
     private void OnDestroy()
     {
         // initialize Action listeners
-        if (data.semiAuto)
+        if (gunData.semiAuto)
         {
             InputManager.shootStartAction -= Shoot;
         }

@@ -382,7 +382,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   muzzle: {fileID: 3440757592653107983}
-  data: {fileID: 11400000, guid: 828615c177a98844796fccf4cbf1fced, type: 2}
+  gunData: {fileID: 11400000, guid: 828615c177a98844796fccf4cbf1fced, type: 2}
+  bulletData: {fileID: 11400000, guid: 42ddecc374399ac4ba43d51e788d2f3d, type: 2}
   bullet: {fileID: 7966245237315316576, guid: 825f22f9fac77994e84e359d8b77e25d, type: 3}
 --- !u!1 &2818564856996732306
 GameObject:

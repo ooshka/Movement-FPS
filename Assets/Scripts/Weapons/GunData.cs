@@ -1,6 +1,6 @@
 using UnityEngine;
 
-[CreateAssetMenu(menuName = "Weapon/Gun")]
+[CreateAssetMenu(menuName = "Weapon/GunData")]
 public class GunData : ScriptableObject
 {
     public enum GunType
@@ -37,10 +37,8 @@ public class GunData : ScriptableObject
     public float settlingPositionCooldown;
 
     [Header("Projectiles")]
-    public float damage;
     public float bulletsPerShot;
-    public float bulletSpeed;
-    public float maxDistance;
+
 
     [Header("Reload")]
     public int clipSize;

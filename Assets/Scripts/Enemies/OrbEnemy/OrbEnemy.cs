@@ -6,6 +6,10 @@ public class OrbEnemy : Enemy
 {
     [SerializeField]
     Material laserMaterial;
+    [SerializeField]
+    AbstractBullet bulletPrefab;
+    [SerializeField]
+    Transform muzzleTransform;
 
     private float changeAngleTime = 2f;
     private float rotationSpeed = 1f;
@@ -67,7 +71,7 @@ public class OrbEnemy : Enemy
                 chargeCooldownTimer.SetTime(1f);
             }
 
-            lineRenderer.SetPosition(0, transform.position);
+            lineRenderer.SetPosition(0, muzzleTransform.position);
             lineRenderer.SetPosition(1, playerTransform.position);
         }
 
@@ -140,7 +144,7 @@ public class OrbEnemy : Enemy
         }
         if (isChargingAttack)
         {
-            Debug.Log("Attack");
+            Shoot();
             isChargingAttack = false;
             chargeCooldownTimer.Reset();
         }
@@ -174,6 +178,7 @@ public class OrbEnemy : Enemy
 
     private void Shoot()
     {
-
+        AbstractBullet bulletInstance = Instantiate(bulletPrefab, muzzleTransform.position, Quaternion.identity);
+        bulletInstance.Fire(playerTransform.position - muzzleTransform.position);
     }
 }
