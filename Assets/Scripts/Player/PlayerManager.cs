@@ -2,25 +2,32 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PlayerManager : MonoBehaviour
+public class PlayerManager : MonoBehaviour, IDamageable
 {
 
     private AbstractGun _primaryWeapon, _secondaryWeapon, _powerWeapon;
 
     [SerializeField]
     private GameObject _weaponHolder;
+    [SerializeField]
+    private GameObject _hudCanvas;
+
     private StateController _stateController;
+    private Healthbar _healthbar;
     // Start is called before the first frame update
     void Start()
     {
+
         _stateController = GetComponent<StateController>();
         _stateController.SetActiveGun(_weaponHolder.GetComponentInChildren<AbstractGun>());
+        _healthbar = _hudCanvas.GetComponentInChildren<Healthbar>();
+        _healthbar.onDeath += onDeath;
     }
 
     // Update is called once per frame
     void Update()
     {
-        
+       
     }
 
     public void PickupGun(AbstractGun weapon)
@@ -47,5 +54,15 @@ public class PlayerManager : MonoBehaviour
         weapon.transform.localPosition = originalPosition;
         weapon.transform.localRotation = originalRotation;
         weapon.transform.localScale = originalScale;
+    }
+
+    private void onDeath()
+    {
+        Debug.Log("YOU DEAD");
+    }
+    
+    public void Damage(float damage)
+    {
+        _healthbar.ApplyDamage(damage);
     }
 }

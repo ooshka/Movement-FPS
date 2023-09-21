@@ -31,18 +31,21 @@ public abstract class AbstractBullet : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
+        Debug.Log(LayerMask.LayerToName(collision.collider.gameObject.layer));
+
         if (collision.collider.gameObject.layer != ignoreLayer)
         {
+
             Vector3 hitLocation = collision.GetContact(0).point;
 
             if (collision.gameObject.TryGetComponent(out IDamageable hit))
             {
                 hit.Damage(data.baseDamage);
+            } else
+            {
+                GameObject impact = Instantiate(impactObject, hitLocation, Quaternion.identity);
+                Destroy(impact, 3f);
             }
-
-            GameObject impact = Instantiate(impactObject, hitLocation, Quaternion.identity);
-
-            Destroy(impact, 3f);
             Destroy(gameObject);
         }
     }

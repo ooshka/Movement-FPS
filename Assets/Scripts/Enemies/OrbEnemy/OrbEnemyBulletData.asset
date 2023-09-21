@@ -14,5 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   parent: 1
   baseDamage: 10
-  bulletSpeed: 200
+  bulletSpeed: 50
   maxDistance: 500

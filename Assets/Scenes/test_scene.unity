@@ -1183,6 +1183,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _weaponHolder: {fileID: 2040235618}
+  _hudCanvas: {fileID: 1149107904}
 --- !u!1001 &1924587757
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1941,5 +1942,13 @@ PrefabInstance:
       propertyPath: muzzleTransform
       value: 
       objectReference: {fileID: 751593425}
+    - target: {fileID: 7866783354317566876, guid: 479774f9f8c0f7449af68cfc2a5d73fd, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7866783354317566876, guid: 479774f9f8c0f7449af68cfc2a5d73fd, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0.6376
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 479774f9f8c0f7449af68cfc2a5d73fd, type: 3}
